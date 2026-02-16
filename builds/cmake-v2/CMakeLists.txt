@@ -119,7 +119,7 @@ target_compile_options(bitcoin-network-test
   PRIVATE
     $<$<CXX_COMPILER_ID:MSVC>:/permissive- /W3>
     $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -Wpedantic>
-    $<BOOL:${with-ssl}>:-DCERT_PREFIX="\\\"${CMAKE_CURRENT_SOURCE_DIR}/../../test/wolfssl/wolfcrypt/test/\\\""
+    $<BOOL:${with-ssl}>:-DCERT_PREFIX="\\\"${CMAKE_CURRENT_SOURCE_DIR}/../../test/ssl/wolfssl/wolfcrypt/test/\\\""
 )
 
   target_link_libraries( bitcoin-network-test PRIVATE
