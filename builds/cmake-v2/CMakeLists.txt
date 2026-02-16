@@ -1,110 +1,6 @@
 #cmake_minimum_required(VERSION 3.22...3.30)
 cmake_minimum_required(VERSION 3.30 FATAL_ERROR)
 
-function(remove_in_target_property target property value)
-    if(NOT TARGET "${target}")
-        message(WARNING "remove_in_target_property: Target '${target}' does not exist")
-        return()
-    endif()
-
-    get_target_property(current "${target}" "${property}")
-
-   if(NOT current)
-        # Property not set or empty → nothing to do
-        return()
-    endif()
-
-    list(FIND current "${old_value}" idx)
-    if(idx EQUAL -1)
-        # Not found → no change
-        return()
-    endif()
-
-    list(REMOVE_AT current ${idx})
-
-    set_property(TARGET "${target}" PROPERTY "${property}" ${current})
-endfunction()
-
-function(replace_in_target_property target property old_value new_value)
-    if(NOT TARGET "${target}")
-        message(WARNING "replace_in_target_property: Target '${target}' does not exist")
-        return()
-    endif()
-
-    get_target_property(current "${target}" "${property}")
-
-    if(NOT current)
-        # Property not set or empty → nothing to do
-        return()
-    endif()
-
-    list(FIND current "${old_value}" idx)
-    if(idx EQUAL -1)
-        # Not found → no change
-        return()
-    endif()
-
-    list(REMOVE_AT current ${idx})
-
-    if(NOT "${new_value}" STREQUAL "")
-        list(INSERT current ${idx} "${new_value}")
-        # or: list(APPEND current "${new_value}")  # ← if order doesn't matter
-    endif()
-
-    set_property(TARGET "${target}" PROPERTY "${property}" ${current})
-
-    # Optional: show what happened (useful during debugging)
-    # message(STATUS "Replaced '${old_value}' → '${new_value}' in ${property} of ${target}")
-endfunction()
-
-function(print_target_link_libraries tgt)
-    if(NOT TARGET ${tgt})
-        message(WARNING "print_target_link_libraries: ${tgt} is not a target")
-        return()
-    endif()
-
-    include(CMakePrintHelpers)
-
-    message(STATUS "")
-    message(STATUS "Link information for target: ${tgt}")
-    message(STATUS "----------------------------------------")
-
-    cmake_print_properties(
-        TARGETS ${tgt}
-        PROPERTIES
-            LINK_LIBRARIES
-            INTERFACE_LINK_LIBRARIES
-            LINK_OPTIONS
-            INTERFACE_LINK_OPTIONS
-    )
-
-    get_target_property(libs ${tgt} LINK_LIBRARIES)
-    if(libs)
-        message(STATUS "Direct libraries:")
-        foreach(lib IN LISTS libs)
-            message(STATUS "  ${lib}")
-        endforeach()
-    endif()
-
-    # Optional: try to resolve to final linker-style names (approximate)
-    message(STATUS "Final link line approximation (not exact):")
-    foreach(lib IN LISTS libs)
-        if(TARGET ${lib})
-            # It's a CMake target → would be resolved transitively
-            message(STATUS "  <target ${lib}>")
-        elseif(IS_ABSOLUTE "${lib}")
-            # Full path
-            message(STATUS "  ${lib}")
-        elseif(lib MATCHES "^-.+")
-            # Flag
-            message(STATUS "  ${lib}")
-        else()
-            # -lxxx style
-            message(STATUS "  -l${lib}")
-        endif()
-    endforeach()
-endfunction()
-
 project(libbitcoin-network
   VERSION 4.0.0
   DESCRIPTION "Bitcoin Cross-Platform C++ Development Toolkit - base library"
@@ -168,14 +64,11 @@ target_sources( bitcoin-network PRIVATE
 target_include_directories( bitcoin-network
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../../include>
-    $<$<BOOL:${with-ssl}>:$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../../include/bitcoin/network/ssl>>
     $<INSTALL_INTERFACE:include>
-    $<$<BOOL:${with-ssl}>:$<BUILD_INTERFACE:include/bitcoin/network/ssl>>
-)
-
-target_include_directories( bitcoin-network
-  PRIVATE
-    Bitcoin::system
+    $<$<BOOL:${with-ssl}>:
+      $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../../include/bitcoin/network/ssl>
+      $<INSTALL_INTERFACE:include/bitcoin/network/ssl>
+    >
 )
 
 target_compile_features(bitcoin-network PUBLIC cxx_std_${LIBBITCOIN_CXX_STANDARD})
@@ -186,24 +79,15 @@ target_compile_definitions(bitcoin-network
     # Add other internal defines if needed, e.g. BC_USE_ICU
 )
 
-#print_target_link_libraries(libsecp256k1::secp256k1)
-#print_target_link_libraries(Boost::iostreams)
-#print_target_link_libraries(Boost::locale)
-#print_target_link_libraries(Boost::program_options)
-#print_target_link_libraries(Boost::thread)
-#print_target_link_libraries(Boost::url)
-
 target_link_libraries(bitcoin-network
   PUBLIC
     bitcoin::system
 )
 
-#print_target_link_libraries(bitcoin::network)
-
 # Very common flags for libbitcoin projects
 target_compile_options(bitcoin-network
   PUBLIC
-i   $<$<BOOL:${with-ssl}>:-DWITH_SSL>
+    $<$<BOOL:${with-ssl}>:-DWITH_SSL -DWOLFSSL_USER_SETTINGS>
   PRIVATE
     $<$<CXX_COMPILER_ID:MSVC>:/permissive- /W3>
     $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -Wpedantic>
@@ -230,6 +114,13 @@ if(with-tests)
 
   target_sources( bitcoin-network-test PRIVATE
     ${bitcoin_network_test_SOURCES} )
+
+target_compile_options(bitcoin-network-test
+  PRIVATE
+    $<$<CXX_COMPILER_ID:MSVC>:/permissive- /W3>
+    $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -Wpedantic>
+    $<BOOL:${with-ssl}>:-DCERT_PREFIX="\\\"${CMAKE_CURRENT_SOURCE_DIR}/../../test/wolfssl/wolfcrypt/test/\\\""
+)
 
   target_link_libraries( bitcoin-network-test PRIVATE
     bitcoin::network
