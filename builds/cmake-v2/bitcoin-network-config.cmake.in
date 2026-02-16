@@ -1,0 +1,19 @@
+@PACKAGE_INIT@
+
+include("${CMAKE_CURRENT_LIST_DIR}/bitcoin-network-targets.cmake")
+
+check_required_components(system)
+
+# Propagate dependencies to consumers
+include(CMakeFindDependencyMacro)
+
+find_dependency(Boost 1.74 REQUIRED COMPONENTS
+  atomic chrono date_time filesystem iostreams locale log
+  program_options regex system thread
+)
+
+# If you support ICU conditionally
+# find_dependency(PkgConfig)
+# pkg_check_modules(ICU ucs4 QUIET)
+
+# secp256k1 is frequently vendored or found differently – left optional here
