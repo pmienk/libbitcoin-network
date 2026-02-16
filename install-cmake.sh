@@ -41,7 +41,7 @@
 # Branches for github dependencies.
 #------------------------------------------------------------------------------
 SECP256K1_BRANCH="v0.7.0"
-BITCOIN_SYSTEM_BRANCH="cmake-experimental"
+BITCOIN_SYSTEM_BRANCH="cmake-experiment"
 BITCOIN_NETWORK_BRANCH="cmake-experimental"
 BITCOIN_OWNER="pmienk"
 
