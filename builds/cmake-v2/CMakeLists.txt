@@ -74,6 +74,8 @@ target_include_directories( bitcoin-network
 target_compile_features(bitcoin-network PUBLIC cxx_std_${LIBBITCOIN_CXX_STANDARD})
 
 target_compile_definitions(bitcoin-network
+  PUBLIC
+    $<$<BOOL:${with-ssl}>:-DWITH_SSL -DWOLFSSL_USER_SETTINGS>
   PRIVATE
     $<$<BOOL:${BUILD_SHARED_LIBS}>:BC_DLL>
     # Add other internal defines if needed, e.g. BC_USE_ICU
@@ -86,8 +88,6 @@ target_link_libraries(bitcoin-network
 
 # Very common flags for libbitcoin projects
 target_compile_options(bitcoin-network
-  PUBLIC
-    $<$<BOOL:${with-ssl}>:-DWITH_SSL -DWOLFSSL_USER_SETTINGS>
   PRIVATE
     $<$<CXX_COMPILER_ID:MSVC>:/permissive- /W3>
     $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -Wpedantic>
@@ -108,6 +108,7 @@ if(with-tests)
 
   file(GLOB_RECURSE bitcoin_network_test_SOURCES
     "${CMAKE_CURRENT_SOURCE_DIR}/../../test/*.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../../test/*.c"
   )
 
   add_executable( bitcoin-network-test )
@@ -115,21 +116,23 @@ if(with-tests)
   target_sources( bitcoin-network-test PRIVATE
     ${bitcoin_network_test_SOURCES} )
 
-target_compile_options(bitcoin-network-test
-  PRIVATE
-    $<$<CXX_COMPILER_ID:MSVC>:/permissive- /W3>
-    $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -Wpedantic>
-    $<BOOL:${with-ssl}>:-DCERT_PREFIX="\\\"${CMAKE_CURRENT_SOURCE_DIR}/../../test/ssl/wolfssl/wolfcrypt/test/\\\""
-)
-
   target_link_libraries( bitcoin-network-test PRIVATE
     bitcoin::network
     Boost::unit_test_framework
   )
 
   target_include_directories( bitcoin-network-test PRIVATE
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../../include>
-    $<$<BOOL:${with-ssl}>:$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../../include/bitcoin/network/ssl>>
+    $<$<BOOL:${with-ssl}>:${CMAKE_CURRENT_SOURCE_DIR}/../../test/ssl/wolfssl>
+  )
+
+  target_compile_definitions(bitcoin-network-test
+    PRIVATE
+      $<$<BOOL:${with-ssl}>:-DCERT_PREFIX="${CMAKE_CURRENT_SOURCE_DIR}/../../test/ssl/wolfssl/wolfcrypt/test/">
+  )
+  target_compile_options(bitcoin-network-test
+    PRIVATE
+      $<$<CXX_COMPILER_ID:MSVC>:/permissive- /W3>
+      $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -Wpedantic>
   )
 
   add_test( NAME bitcoin-network-test COMMAND bitcoin-network-test
