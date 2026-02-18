@@ -96,7 +96,7 @@ target_compile_options(bitcoin-network
 set_target_properties(bitcoin-network PROPERTIES
   VERSION   ${PROJECT_VERSION}
   SOVERSION ${PROJECT_VERSION_MAJOR}
-  EXPORT_NAME system
+  EXPORT_NAME network
 )
 
 # ──────────────────────────────────────────────────────────────
