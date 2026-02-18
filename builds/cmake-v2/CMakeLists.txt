@@ -44,6 +44,7 @@ find_package( bitcoin-system 4.0.0 REQUIRED )
 file(GLOB_RECURSE bitcoin_network_HEADERS CONFIGURE_DEPENDS
   "${CMAKE_CURRENT_SOURCE_DIR}/../../include/bitcoin/*.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../../include/bitcoin/*.ipp"
+  "${CMAKE_CURRENT_SOURCE_DIR}/../../include/bitcoin/*.h"
 )
 
 file( GLOB_RECURSE bitcoin_network_SOURCES CONFIGURE_DEPENDS
