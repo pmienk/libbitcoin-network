@@ -244,6 +244,16 @@ if ( with-test )
     "${CMAKE_CURRENT_SOURCE_DIR}/../../test/*.ipp"
   )
 
+  file( GLOB_RECURSE libbitcoin_network_tests_HEADERS_SSL CONFIGURE_DEPENDS
+    "${CMAKE_CURRENT_SOURCE_DIR}/../../test/ssl/worlssl/*.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../../test/ssl/worlssl/*.hpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../../test/ssl/worlssl/*.ipp"
+  )
+
+  if ( !with-ssl )
+    list( REMOVE_ITEM libbitcoin_network_tests_HEADERS ${libbitcoin_network_tests_HEADERS_SSL} )
+  endif()
+
   file( GLOB_RECURSE libbitcoin_network_tests_SOURCES CONFIGURE_DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/../../test/*.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/../../test/*.cpp"
@@ -262,6 +272,9 @@ if ( with-test )
   target_include_directories( libbitcoin-network-tests
     PRIVATE
       $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../../test>
+      $<$<BOOL:${with-ssl}>:
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../../test/ssl/worlssl>
+      >
   )
 
   target_link_libraries( libbitcoin-network-tests
