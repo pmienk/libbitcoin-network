@@ -93,6 +93,23 @@ if ( "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" )
   endif()
 endif()
 
+check_cxx_compiler_flag( "-Wno-ignored-attributes" HAS_FLAG_WNO-IGNORED-ATTRIBUTES )
+if ( !HAS_FLAG_WNO-IGNORED-ATTRIBUTES )
+    message( FATAL_ERROR "Compiler does not support '-Wno-ignored-attributes'." )
+endif()
+
+check_cxx_compiler_flag( "-Wno-long-long" HAS_FLAG_WNO-LONG-LONG )
+if ( !HAS_FLAG_WNO-LONG-LONG )
+    message( FATAL_ERROR "Compiler does not support '-Wno-long-long'." )
+endif()
+
+if ( "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" )
+  check_cxx_compiler_flag( "-fno-var-tracking-assignments" HAS_FLAG_FNO-VAR-TRACKING-ASSIGNMENTS )
+  if ( !HAS_FLAG_FNO-VAR-TRACKING-ASSIGNMENTS )
+      message( FATAL_ERROR "Compiler does not support '-fno-var-tracking-assignments'." )
+  endif()
+endif()
+
 #------------------------------------------------------------------------------
 # bitcoin-network library
 #------------------------------------------------------------------------------
@@ -199,6 +216,21 @@ if ( with-test )
     --detect_memory_leak=0
     --report_level=no
     --build_info=yes
+  )
+
+  target_compile_options( libbitcoin-network-tests
+    PRIVATE
+      -Wall
+      -Wextra
+      $<$<COMPILE_LANGUAGE:CXX>:-Wno-reorder>
+      $<$<COMPILE_LANGUAGE:CXX>:-Wno-missing-field-initializers>
+      $<$<COMPILE_LANGUAGE:CXX>:-Wno-missing-braces>
+      $<$<COMPILE_LANGUAGE:CXX>:-Wno-comment>
+      $<$<COMPILE_LANGUAGE:CXX>:-Wno-deprecated-copy>
+      $<$<COMPILE_LANGUAGE:CXX>:-Wno-ignored-attributes>
+      $<$<CXX_COMPILER_ID:Clang>:-Wno-mismatched-tags>
+      $<$<COMPILE_LANGUAGE:CXX>:-Wno-long-long>
+      $<$<CXX_COMPILER_ID:GNU>:-fno-var-tracking-assignments>
   )
 
   target_compile_definitions( libbitcoin-network-tests
