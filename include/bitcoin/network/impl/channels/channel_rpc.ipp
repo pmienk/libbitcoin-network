@@ -152,8 +152,9 @@ void CLASS::send_error(rpc::result_t&& error,
     result_handler&& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
+    const auto hint = two * error.message.size();
     send({ .jsonrpc = version_, .id = identity_, .error = std::move(error) },
-        two * error.message.size(), std::move(handler));
+        hint, std::move(handler));
 }
 
 TEMPLATE
