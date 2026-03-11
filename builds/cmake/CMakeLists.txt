@@ -11,7 +11,6 @@ project( libbitcoin-network
   DESCRIPTION "Bitcoin P2P Network Library"
   LANGUAGES C CXX )
 
-list( APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/modules" )
 
 set( repository_root_dir "${CMAKE_CURRENT_SOURCE_DIR}/../../" )
 
@@ -220,7 +219,7 @@ if ( with-test )
 
   target_sources( libbitcoin-network-tests
     PRIVATE
-      FILE_SET HEADERS_PRIVATE
+      FILE_SET HEADERS
       BASE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/../../test"
       FILES
         ${libbitcoin_network_tests_HEADERS}
