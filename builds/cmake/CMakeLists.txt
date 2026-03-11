@@ -132,7 +132,9 @@ file( GLOB_RECURSE bitcoin_network_HEADERS_SSL CONFIGURE_DEPENDS
   "${CMAKE_CURRENT_SOURCE_DIR}/../../include/bitcoin/network/ssl/*.ipp"
 )
 
-list( REMOVE_ITEM bitcoin_network_HEADERS ${bitcoin_network_HEADERS_SSL} )
+if ( !with-ssl )
+  list( REMOVE_ITEM bitcoin_network_HEADERS ${bitcoin_network_HEADERS_SSL} )
+endif()
 
 file( GLOB_RECURSE bitcoin_network_SOURCES CONFIGURE_DEPENDS
   "${CMAKE_CURRENT_SOURCE_DIR}/../../src/*.c"
@@ -144,7 +146,9 @@ file( GLOB_RECURSE bitcoin_network_SOURCES_SSL CONFIGURE_DEPENDS
   "${CMAKE_CURRENT_SOURCE_DIR}/../../src/ssl/*.cpp"
 )
 
-list( REMOVE_ITEM bitcoin_network_SOURCES ${bitcoin_network_SOURCES_SSL} )
+if ( !with-ssl )
+  list( REMOVE_ITEM bitcoin_network_SOURCES ${bitcoin_network_SOURCES_SSL} )
+endif()
 
 target_sources( bitcoin-network
   PUBLIC
@@ -152,10 +156,8 @@ target_sources( bitcoin-network
     BASE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/../../include"
     FILES
       ${bitcoin_network_HEADERS}
-      $<$<BOOL:${with-ssl}>:${bitcoin_network_HEADERS_SSL}>
   PRIVATE
     ${bitcoin_network_SOURCES}
-    $<$<BOOL:${with-ssl}>:${bitcoin_network_SOURCES_SSL}>
 )
 
 target_include_directories( bitcoin-network
