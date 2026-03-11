@@ -13,6 +13,8 @@ project( libbitcoin-network
 
 list( APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/modules" )
 
+set( repository_root_dir "${CMAKE_CURRENT_SOURCE_DIR}/../../" )
+
 if ( MSVC )
   set( CMAKE_STATIC_LIBRARY_PREFIX "lib" )
   set( CMAKE_SHARED_LIBRARY_PREFIX "lib" )
@@ -202,7 +204,13 @@ if ( with-test )
 
   target_compile_definitions( libbitcoin-network-tests
     PRIVATE
-      $<$<BOOL:${with-ssl}>:CERT_PREFIX="\"${src_dir}/test/ssl/wolfssl/wolfcrypt/test/\"">
+      $<$<BOOL:${with-ssl}>:CERT_PREFIX="\"${repository_root_dir}/test/ssl/wolfssl/wolfcrypt/test/\"">
+  )
+
+  file( GLOB_RECURSE libbitcoin_network_tests_HEADERS CONFIGURE_DEPENDS
+    "${CMAKE_CURRENT_SOURCE_DIR}/../../test/*.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../../test/*.hpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../../test/*.ipp"
   )
 
   file( GLOB_RECURSE libbitcoin_network_tests_SOURCES CONFIGURE_DEPENDS
@@ -212,7 +220,17 @@ if ( with-test )
 
   target_sources( libbitcoin-network-tests
     PRIVATE
+      FILE_SET HEADERS_PRIVATE
+      BASE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/../../test"
+      FILES
+        ${libbitcoin_network_tests_HEADERS}
+    PRIVATE
       ${libbitcoin_network_tests_SOURCES}
+  )
+
+  target_include_directories( libbitcoin-network-tests
+    PRIVATE
+      $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../../test>
   )
 
   target_link_libraries( libbitcoin-network-tests
