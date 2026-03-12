@@ -114,6 +114,14 @@ using response_cptr = std::shared_ptr<const response>;
 using response_ptr = std::shared_ptr<response>;
 using writer = response_body::writer;
 
+// Allows request to be sent (for notifications).
+template <typename Message>
+using message_value = typename body<Message>::value_type;
+template <typename Message>
+using message_ptr = std::shared_ptr<message_value<Message>>;
+template <typename Message>
+using message_cptr = std::shared_ptr<const message_value<Message>>;
+
 } // namespace rpc
 } // namespace network
 } // namespace libbitcoin

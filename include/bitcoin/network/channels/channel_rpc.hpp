@@ -64,6 +64,9 @@ public:
         result_handler&& handler) NOEXCEPT;
     inline void send_result(rpc::value_t&& result, size_t size_hint,
         result_handler&& handler) NOEXCEPT;
+    inline void send_notification(const rpc::string_t& method,
+        rpc::params_t&& notification, size_t size_hint,
+        result_handler&& handler) NOEXCEPT;
 
     /// Resume reading from the socket (requires strand).
     inline void resume() NOEXCEPT override;
@@ -71,8 +74,20 @@ public:
 protected:
     /// Serialize and write response to client (requires strand).
     /// Completion handler is always invoked on the channel strand.
-    inline void send(rpc::response_t&& message, size_t size_hint,
+    template <typename Message>
+    inline void send(Message&& message, size_t size_hint,
         result_handler&& handler) NOEXCEPT;
+
+    /// Size and assign response_buffer_ (value type is json-rpc::json).
+    template <typename Message>
+    inline rpc::message_ptr<Message> assign_message(Message&& message,
+        size_t size_hint) NOEXCEPT;
+
+    /// Handle send<response> completion, invokes receive().
+    template <typename Message>
+    inline void handle_send(const code& ec, size_t bytes,
+        const rpc::message_cptr<Message>& message,
+        const result_handler& handler) NOEXCEPT;
 
     /// Stranded handler invoked from stop().
     inline void stopping(const code& ec) NOEXCEPT override;
@@ -83,21 +98,12 @@ protected:
     /// Override to dispatch request to subscribers by requested method.
     virtual inline void dispatch(const rpc::request_cptr& request) NOEXCEPT;
 
-    /// Size and assign response_buffer_ (value type is json-rpc::json).
-    virtual inline rpc::response_ptr assign_message(rpc::response_t&& message,
-        size_t size_hint) NOEXCEPT;
-
     /// Must call after successful message handling if no stop.
     virtual inline void receive() NOEXCEPT;
 
     /// Handle incoming messages.
     virtual inline void handle_receive(const code& ec, size_t bytes,
         const rpc::request_cptr& request) NOEXCEPT;
-
-    /// Handle send completion, invokes receive().
-    virtual inline void handle_send(const code& ec, size_t bytes,
-        const rpc::response_cptr& response,
-        const result_handler& handler) NOEXCEPT;
 
 private:
     // These are protected by strand.

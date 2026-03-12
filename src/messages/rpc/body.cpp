@@ -35,7 +35,7 @@ BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 BC_PUSH_WARNING(NO_UNGUARDED_POINTERS)
 BC_PUSH_WARNING(NO_POINTER_ARITHMETIC)
 
-// rpc::body::reader
+// rpc::body<request_t>::reader
 // ----------------------------------------------------------------------------
 
 template <>
@@ -140,6 +140,9 @@ finish(boost_code& ec) NOEXCEPT
     }
 }
 
+// rpc::body<response_t>::reader (unused)
+// ----------------------------------------------------------------------------
+
 template <>
 size_t body<rpc::response_t>::reader::
 put(const buffer_type&, boost_code&) NOEXCEPT
@@ -163,7 +166,7 @@ done() const NOEXCEPT
     return {};
 }
 
-// rpc::body::writer
+// rpc::body<response_t>::writer
 // ----------------------------------------------------------------------------
 
 template <>
@@ -223,28 +226,64 @@ done() const NOEXCEPT
     return base::writer::done() && (!terminate_ || set_terminator_);
 }
 
+// rpc::body<request_t>::writer
+// ----------------------------------------------------------------------------
+
 template <>
 void body<rpc::request_t>::writer::
-init(boost_code&) NOEXCEPT
+init(boost_code& ec) NOEXCEPT
 {
-    BC_ASSERT(false);
+    base::writer::init(ec);
+    if (ec) return;
+
+    try
+    {
+        boost::json::value_from(value_.message, value_.model);
+    }
+    catch (const boost::system::system_error& e)
+    {
+        // Primary exception type for parsing operations.
+        ec = e.code();
+        return;
+    }
+    catch (...)
+    {
+        ec = code{ error::jsonrpc_writer_exception };
+        return;
+    }
+
+    set_terminator_ = false;
+    serializer_.reset(&value_.model);
 }
 
 template <>
 body<rpc::request_t>::writer::out_buffer
 body<rpc::request_t>::writer::
-get(boost_code&) NOEXCEPT
+get(boost_code& ec) NOEXCEPT
 {
-    BC_ASSERT(false);
-    return {};
+    auto out = base::writer::done() ? out_buffer{} : base::writer::get(ec);
+    if (ec) return out;
+
+    // Override json reader !more so terminator can be added.
+    if (out.has_value())
+    {
+        out.value().second = true;
+        return out;
+    }
+
+    // Add terminator and signal done.
+    set_terminator_ = true;
+    using namespace boost::asio;
+    static constexpr auto line = '\n';
+    return out_buffer{ std::make_pair(buffer(&line, sizeof(line)), false) };
 }
 
 template <>
 bool body<rpc::request_t>::writer::
 done() const NOEXCEPT
 {
-    BC_ASSERT(false);
-    return {};
+    // Done is redundant with !out.second, but provides a cleaner interface.
+    return base::writer::done() && (!terminate_ || set_terminator_);
 }
 
 BC_POP_WARNING()

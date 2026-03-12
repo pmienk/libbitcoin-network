@@ -24,6 +24,10 @@
 #include <optional>
 #include <memory>
 #include <utility>
+
+// The default is 4096, which hits the variant http_body.
+#define BOOST_BEAST_FILE_BUFFER_SIZE 1024
+
 #include <boost/beast/core.hpp>
 #include <boost/beast/http.hpp>
 #include <boost/beast/websocket.hpp>

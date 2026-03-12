@@ -143,6 +143,10 @@ protected:
     virtual void write(rpc::response& response,
         count_handler&& handler) NOEXCEPT;
 
+    /// Write rpc notification (request) to the socket (json buffer in body).
+    virtual void write(rpc::request& notification,
+        count_handler&& handler) NOEXCEPT;
+
     /// WS (generic).
     /// -----------------------------------------------------------------------
 
