@@ -235,7 +235,7 @@ if ( with-test )
 
   target_compile_definitions( libbitcoin-network-tests
     PRIVATE
-      $<$<BOOL:${with-ssl}>:CERT_PREFIX="\"${repository_root_dir}/test/ssl/wolfssl/wolfcrypt/test/\"">
+      $<$<BOOL:${with-ssl}>:CERT_PREFIX="${repository_root_dir}/test/ssl/wolfssl/wolfcrypt/test/">
   )
 
   file( GLOB_RECURSE libbitcoin_network_tests_HEADERS CONFIGURE_DEPENDS
