@@ -132,6 +132,10 @@ public:
     virtual void rpc_write(rpc::response& response,
         count_handler&& handler) NOEXCEPT;
 
+    /// Write rpc notification to the socket, handler posted to socket strand.
+    virtual void rpc_notify(rpc::request& notification,
+        count_handler&& handler) NOEXCEPT;
+
     /// WS (generic).
     /// -----------------------------------------------------------------------
 
@@ -230,7 +234,7 @@ private:
         }
 
         rpc::request& value;
-        rpc::reader reader;
+        rpc::request_body::reader reader;
         http::flat_buffer& buffer;
     };
 
@@ -245,7 +249,21 @@ private:
         }
 
         rpc::response& value;
-        rpc::writer writer;
+        rpc::response_body::writer writer;
+    };
+
+    struct notify_rpc
+    {
+        typedef std::shared_ptr<notify_rpc> ptr;
+        using out_buffer = rpc::writer::out_buffer;
+
+        notify_rpc(rpc::request& request) NOEXCEPT
+          : value{ request }, writer{ value }
+        {
+        }
+
+        rpc::request& value;
+        rpc::request_body::writer writer;
     };
 
     // do
@@ -275,6 +293,8 @@ private:
     void do_rpc_read(boost_code ec, size_t total, const read_rpc::ptr& in,
         const count_handler& handler) NOEXCEPT;
     void do_rpc_write(boost_code ec, size_t total, const write_rpc::ptr& out,
+        const count_handler& handler) NOEXCEPT;
+    void do_rpc_notify(boost_code ec, size_t total, const notify_rpc::ptr& out,
         const count_handler& handler) NOEXCEPT;
 
     // ws (generic)
@@ -322,6 +342,8 @@ private:
         const read_rpc::ptr& in, const count_handler& handler) NOEXCEPT;
     void handle_rpc_write(boost_code ec, size_t size, size_t total,
         const write_rpc::ptr& out, const count_handler& handler) NOEXCEPT;
+    void handle_rpc_notify(boost_code ec, size_t size, size_t total,
+        const notify_rpc::ptr& out, const count_handler& handler) NOEXCEPT;
 
     // ws (generic)
     void handle_ws_read(const boost_code& ec, size_t size,

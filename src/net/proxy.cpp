@@ -215,8 +215,14 @@ void proxy::read(http::flat_buffer& buffer, rpc::request& request,
 
 void proxy::write(rpc::response& response, count_handler&& handler) NOEXCEPT
 {
-    // TODO: compose?
+    // TODO: compose (potentially full duplex).
     socket_->rpc_write(response, std::move(handler));
+}
+
+void proxy::write(rpc::request& notification, count_handler&& handler) NOEXCEPT
+{
+    // TODO: compose (full duplex).
+    socket_->rpc_notify(notification, std::move(handler));
 }
 
 // WS (generic).
@@ -230,6 +236,7 @@ void proxy::ws_read(http::flat_buffer& out, count_handler&& handler) NOEXCEPT
 void proxy::ws_write(const asio::const_buffer& in, bool binary,
     count_handler&& handler) NOEXCEPT
 {
+    // TODO: compose (potentially full duplex).
     socket_->ws_write(in, binary, std::move(handler));
 }
 

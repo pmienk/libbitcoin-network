@@ -178,6 +178,70 @@ void socket::handle_rpc_write(boost_code ec, size_t size, size_t total,
     do_rpc_write(ec, total, out, handler);
 }
 
+/// RPC Notify.
+// ----------------------------------------------------------------------------
+// This is identical to 'RPC Write' apart from request and notify_rpc types.
+
+void socket::rpc_notify(rpc::request& notification,
+    count_handler&& handler) NOEXCEPT
+{
+    boost_code ec{};
+    const auto out = emplace_shared<notify_rpc>(notification);
+    out->writer.init(ec);
+
+    // Dispatch success or fail, for handler invoke on strand.
+    boost::asio::dispatch(strand_,
+        std::bind(&socket::do_rpc_notify,
+            shared_from_this(), ec, zero, out, std::move(handler)));
+}
+
+void socket::do_rpc_notify(boost_code ec, size_t total,
+    const notify_rpc::ptr& out, const count_handler& handler) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    const auto buffer = ec ? notify_rpc::out_buffer{} : out->writer.get(ec);
+    if (ec)
+    {
+        // Json serializer emits rpc, http and json codes.
+        const auto code = error::rpc_to_error_code(ec);
+        if (code == error::unknown) logx("rpc-notify", ec);
+        handler(code, total);
+        return;
+    }
+
+    BC_ASSERT(buffer.has_value());
+
+    // Internally this may compose multiple async_write_some to consume buffer.
+    // Writes one buffer from writer, must still iterator until writer is done.
+    VARIANT_DISPATCH_FUNCTION(boost::asio::async_write, get_tcp(),
+        buffer.value().first,
+            std::bind(&socket::handle_rpc_notify,
+                shared_from_this(), _1, _2, total, out, handler));
+}
+
+void socket::handle_rpc_notify(boost_code ec, size_t size, size_t total,
+    const notify_rpc::ptr& out, const count_handler& handler) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    total = ceilinged_add(total, size);
+    if (error::asio_is_canceled(ec))
+    {
+        handler(error::channel_stopped, total);
+        return;
+    }
+
+    if (!ec && out->writer.done())
+    {
+        handler(error::success, total);
+        return;
+    }
+
+    // Handle error condition or incomplete message.
+    do_rpc_notify(ec, total, out, handler);
+}
+
 BC_POP_WARNING()
 BC_POP_WARNING()
 BC_POP_WARNING()
