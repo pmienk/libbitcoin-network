@@ -245,9 +245,9 @@ if ( with-test )
   )
 
   file( GLOB_RECURSE libbitcoin_network_tests_HEADERS_SSL CONFIGURE_DEPENDS
-    "${CMAKE_CURRENT_SOURCE_DIR}/../../test/ssl/worlssl/*.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/../../test/ssl/worlssl/*.hpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/../../test/ssl/worlssl/*.ipp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../../test/ssl/wolfssl/*.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../../test/ssl/wolfssl/*.hpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../../test/ssl/wolfssl/*.ipp"
   )
 
   if ( !with-ssl )
@@ -273,7 +273,7 @@ if ( with-test )
     PRIVATE
       $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../../test>
       $<$<BOOL:${with-ssl}>:
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../../test/ssl/worlssl>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../../test/ssl/wolfssl>
       >
   )
 
