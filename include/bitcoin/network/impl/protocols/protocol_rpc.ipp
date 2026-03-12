@@ -69,6 +69,15 @@ inline void CLASS::send_result(rpc::value_t&& result, size_t size_hint,
     channel_->send_result(std::move(result), size_hint, std::move(handler));
 }
 
+TEMPLATE
+inline void CLASS::send_notification(const rpc::string_t& method,
+    rpc::params_t&& notification, size_t size_hint,
+    result_handler&& handler) NOEXCEPT
+{
+    channel_->send_notification(method, std::move(notification), size_hint,
+        std::move(handler));
+}
+
 } // namespace network
 } // namespace libbitcoin
 

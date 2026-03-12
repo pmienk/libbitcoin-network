@@ -140,40 +140,15 @@ inline http::flat_buffer& CLASS::request_buffer() NOEXCEPT
 // Send.
 // ----------------------------------------------------------------------------
 
-TEMPLATE
-void CLASS::send_code(const code& ec, result_handler&& handler) NOEXCEPT
-{
-    send_error({ .code = ec.value(), .message = ec.message() },
-        std::move(handler));
-}
-
-TEMPLATE
-void CLASS::send_error(rpc::result_t&& error,
-    result_handler&& handler) NOEXCEPT
-{
-    BC_ASSERT(stranded());
-    const auto hint = two * error.message.size();
-    send({ .jsonrpc = version_, .id = identity_, .error = std::move(error) },
-        hint, std::move(handler));
-}
-
-TEMPLATE
-void CLASS::send_result(rpc::value_t&& result, size_t size_hint,
-    result_handler&& handler) NOEXCEPT
-{
-    BC_ASSERT(stranded());
-    send({ .jsonrpc = version_, .id = identity_, .result = std::move(result) },
-        size_hint, std::move(handler));
-}
-
 // protected
 TEMPLATE
-inline void CLASS::send(rpc::response_t&& model, size_t size_hint,
+template <typename Message>
+inline void CLASS::send(Message&& model, size_t size_hint,
     result_handler&& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
     const auto out = assign_message(std::move(model), size_hint);
-    count_handler complete = std::bind(&CLASS::handle_send,
+    count_handler complete = std::bind(&CLASS::handle_send<Message>,
         shared_from_base<CLASS>(), _1, _2, out, std::move(handler));
 
     if (!out)
@@ -187,8 +162,24 @@ inline void CLASS::send(rpc::response_t&& model, size_t size_hint,
 
 // protected
 TEMPLATE
+template <typename Message>
+inline rpc::message_ptr<Message> CLASS::assign_message(Message&& message,
+    size_t size_hint) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+    response_buffer_->max_size(size_hint);
+    const auto ptr = system::to_shared<rpc::message_value<Message>>();
+    ptr->message = std::move(message);
+    ptr->buffer = response_buffer_;
+    return ptr;
+}
+
+// protected
+TEMPLATE
+template <typename Message>
 inline void CLASS::handle_send(const code& ec, size_t bytes,
-    const rpc::response_cptr& response, const result_handler& handler) NOEXCEPT
+    const rpc::message_cptr<Message>& message,
+    const result_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
     if (ec) stop(ec);
@@ -196,24 +187,71 @@ inline void CLASS::handle_send(const code& ec, size_t bytes,
     // Typically a noop, but handshake may pause channel here.
     handler(ec);
 
-    LOGA("Rpc response: (" << bytes << ") bytes [" << endpoint() << "] "
-        << response->message.error.value_or(rpc::result_t{}).message);
+    if constexpr (is_same_type<Message, rpc::response_t>)
+    {
+        LOGA("Rpc response: (" << bytes << ") bytes [" << endpoint() << "] "
+            << message->message.error.value_or(rpc::result_t{}).message);
 
-    // Continue read loop (does not unpause or restart channel).
-    receive();
+        // Continue the read loop (does not unpause or restart).
+        receive();
+    }
+    else
+    {
+        LOGA("Rpc notification: (" << bytes << ") bytes [" << endpoint() << "] "
+            << message->message.method);
+    }
 }
 
-// private
 TEMPLATE
-inline rpc::response_ptr CLASS::assign_message(rpc::response_t&& message,
-    size_t size_hint) NOEXCEPT
+inline void CLASS::send_code(const code& ec, result_handler&& handler) NOEXCEPT
+{
+    send_error(
+    {
+        .code = ec.value(),
+        .message = ec.message()
+    },
+    std::move(handler));
+}
+
+TEMPLATE
+inline void CLASS::send_error(rpc::result_t&& error,
+    result_handler&& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
-    response_buffer_->max_size(size_hint);
-    const auto ptr = system::to_shared<rpc::response>();
-    ptr->message = std::move(message);
-    ptr->buffer = response_buffer_;
-    return ptr;
+    const auto hint = two * error.message.size();
+    send(rpc::response_t
+    {
+        .jsonrpc = version_,
+        .id = identity_,
+        .error = std::move(error)
+    }, hint, std::move(handler));
+}
+
+TEMPLATE
+inline void CLASS::send_result(rpc::value_t&& result, size_t size_hint,
+    result_handler&& handler) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+    send(rpc::response_t
+    {
+        .jsonrpc = version_,
+        .id = identity_,
+        .result = std::move(result)
+    }, size_hint, std::move(handler));
+}
+
+TEMPLATE
+inline void CLASS::send_notification(const rpc::string_t& method,
+    rpc::params_t&& notification, size_t size_hint,
+    result_handler&& handler) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+    send(rpc::request_t
+    {
+        .jsonrpc = version_,
+        .method = method,
+        .params = std::move(notification)
+    }, size_hint, std::move(handler));
 }
 
 BC_POP_WARNING()
