@@ -30,14 +30,14 @@ option( with-test "Build test." ON )
 #------------------------------------------------------------------------------
 
 if ( BUILD_SHARED_LIBS )
-  set( bitcoin-system_USE_STATIC_LIBS "OFF" )
+  set( libbitcoin-system_USE_STATIC_LIBS "OFF" )
   set( Boost_USE_STATIC_LIBS "OFF" )
 else()
-  set( bitcoin-system_USE_STATIC_LIBS "ON" )
+  set( libbitcoin-system_USE_STATIC_LIBS "ON" )
   set( Boost_USE_STATIC_LIBS "ON" )
 endif()
 
-find_package( bitcoin-system 4.0.0 REQUIRED )
+find_package( libbitcoin-system 4.0.0 REQUIRED )
 
 find_package( Boost 1.86.0 REQUIRED
   COMPONENTS
@@ -111,17 +111,17 @@ if ( "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" )
 endif()
 
 #------------------------------------------------------------------------------
-# bitcoin-network library
+# libbitcoin-network library
 #------------------------------------------------------------------------------
-add_library( bitcoin-network )
-add_library( bitcoin::network ALIAS bitcoin-network )
+add_library( libbitcoin-network )
+add_library( bitcoin::network ALIAS libbitcoin-network )
 
-target_compile_features( bitcoin-network
+target_compile_features( libbitcoin-network
   PUBLIC
     cxx_std_20
 )
 
-target_compile_options( bitcoin-network
+target_compile_options( libbitcoin-network
   PRIVATE
     -Wall
     -Wextra
@@ -133,52 +133,52 @@ target_compile_options( bitcoin-network
     $<$<CXX_COMPILER_ID:Clang>:-Wno-mismatched-tags>
 )
 
-target_compile_definitions( bitcoin-network
+target_compile_definitions( libbitcoin-network
   PUBLIC
     $<$<BOOL:${with-ssl}>:WITH_SSL WOLFSSL_USER_SETTINGS>
 )
 
-file( GLOB_RECURSE bitcoin_network_HEADERS CONFIGURE_DEPENDS
+file( GLOB_RECURSE libbitcoin_network_HEADERS CONFIGURE_DEPENDS
   "${CMAKE_CURRENT_SOURCE_DIR}/../../include/*.h"
   "${CMAKE_CURRENT_SOURCE_DIR}/../../include/*.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../../include/*.ipp"
 )
 
-file( GLOB_RECURSE bitcoin_network_HEADERS_SSL CONFIGURE_DEPENDS
+file( GLOB_RECURSE libbitcoin_network_HEADERS_SSL CONFIGURE_DEPENDS
   "${CMAKE_CURRENT_SOURCE_DIR}/../../include/bitcoin/network/ssl/*.h"
   "${CMAKE_CURRENT_SOURCE_DIR}/../../include/bitcoin/network/ssl/*.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/../../include/bitcoin/network/ssl/*.ipp"
 )
 
 if ( !with-ssl )
-  list( REMOVE_ITEM bitcoin_network_HEADERS ${bitcoin_network_HEADERS_SSL} )
+  list( REMOVE_ITEM libbitcoin_network_HEADERS ${libbitcoin_network_HEADERS_SSL} )
 endif()
 
-file( GLOB_RECURSE bitcoin_network_SOURCES CONFIGURE_DEPENDS
+file( GLOB_RECURSE libbitcoin_network_SOURCES CONFIGURE_DEPENDS
   "${CMAKE_CURRENT_SOURCE_DIR}/../../src/*.c"
   "${CMAKE_CURRENT_SOURCE_DIR}/../../src/*.cpp"
 )
 
-file( GLOB_RECURSE bitcoin_network_SOURCES_SSL CONFIGURE_DEPENDS
+file( GLOB_RECURSE libbitcoin_network_SOURCES_SSL CONFIGURE_DEPENDS
   "${CMAKE_CURRENT_SOURCE_DIR}/../../src/ssl/*.c"
   "${CMAKE_CURRENT_SOURCE_DIR}/../../src/ssl/*.cpp"
 )
 
 if ( !with-ssl )
-  list( REMOVE_ITEM bitcoin_network_SOURCES ${bitcoin_network_SOURCES_SSL} )
+  list( REMOVE_ITEM libbitcoin_network_SOURCES ${libbitcoin_network_SOURCES_SSL} )
 endif()
 
-target_sources( bitcoin-network
+target_sources( libbitcoin-network
   PUBLIC
     FILE_SET HEADERS
     BASE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/../../include"
     FILES
-      ${bitcoin_network_HEADERS}
+      ${libbitcoin_network_HEADERS}
   PRIVATE
-    ${bitcoin_network_SOURCES}
+    ${libbitcoin_network_SOURCES}
 )
 
-target_include_directories( bitcoin-network
+target_include_directories( libbitcoin-network
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../../include>
     $<INSTALL_INTERFACE:include>
@@ -188,16 +188,17 @@ target_include_directories( bitcoin-network
     >
 )
 
-target_link_libraries( bitcoin-network
+target_link_libraries( libbitcoin-network
   PUBLIC
     bitcoin::system
 )
 
-set_target_properties(bitcoin-network
+set_target_properties( libbitcoin-network
   PROPERTIES
     VERSION ${PROJECT_VERSION}
     SOVERSION ${PROJECT_VERSION_MAJOR}
     EXPORT_NAME network
+    OUTPUT_NAME bitcoin-network
 )
 
 #------------------------------------------------------------------------------
@@ -282,6 +283,12 @@ if ( with-test )
       Boost::unit_test_framework
       bitcoin::network
   )
+
+  set_target_properties( libbitcoin-network-tests
+    PROPERTIES
+      VERSION ${PROJECT_VERSION}
+      SOVERSION ${PROJECT_VERSION_MAJOR}
+  )
 endif()
 #------------------------------------------------------------------------------
 # Installation routine.
@@ -289,8 +296,8 @@ endif()
 include( GNUInstallDirs )
 include( CMakePackageConfigHelpers )
 
-install( TARGETS bitcoin-network
-  EXPORT bitcoin-network-targets
+install( TARGETS libbitcoin-network
+  EXPORT libbitcoin-network-targets
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
@@ -298,27 +305,27 @@ install( TARGETS bitcoin-network
   FILE_SET HEADERS
 )
 
-install( EXPORT bitcoin-network-targets
+install( EXPORT libbitcoin-network-targets
   NAMESPACE bitcoin::
-  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/bitcoin-network
-  FILE bitcoin-network-targets.cmake
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/libbitcoin-network
+  FILE libbitcoin-network-targets.cmake
 )
 
 configure_package_config_file(
-  ${CMAKE_CURRENT_SOURCE_DIR}/bitcoin-network-config.cmake.in
-  ${CMAKE_CURRENT_BINARY_DIR}/bitcoin-network-config.cmake
-  INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/bitcoin-network
+  ${CMAKE_CURRENT_SOURCE_DIR}/libbitcoin-network-config.cmake.in
+  ${CMAKE_CURRENT_BINARY_DIR}/libbitcoin-network-config.cmake
+  INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/libbitcoin-network
 )
 
 write_basic_package_version_file(
-  "${CMAKE_CURRENT_BINARY_DIR}/bitcoin-network-config-version.cmake"
+  "${CMAKE_CURRENT_BINARY_DIR}/libbitcoin-network-config-version.cmake"
   VERSION ${PACKAGE_VERSION}
   COMPATIBILITY AnyNewerVersion
 )
 
 install(
   FILES
-    ${CMAKE_CURRENT_BINARY_DIR}/bitcoin-network-config.cmake
-    ${CMAKE_CURRENT_BINARY_DIR}/bitcoin-network-config-version.cmake
-  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/bitcoin-network
+    ${CMAKE_CURRENT_BINARY_DIR}/libbitcoin-network-config.cmake
+    ${CMAKE_CURRENT_BINARY_DIR}/libbitcoin-network-config-version.cmake
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/libbitcoin-network
 )
