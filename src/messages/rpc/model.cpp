@@ -173,7 +173,7 @@ DEFINE_JSON_FROM_TAG(identity_t)
     {
         [&](null_t) NOEXCEPT
         {
-            value = boost::json::value{};
+            value = json_t{};
         },
         [&](code_t visit) NOEXCEPT
         {
@@ -332,7 +332,7 @@ DEFINE_JSON_FROM_TAG(response_t)
     else if (instance.jsonrpc == version::v1 || 
         instance.jsonrpc == version::undefined)
     {
-        object["error"] = boost::json::value{};
+        object["error"] = json_t{};
     }
 
     if (instance.result.has_value())
@@ -342,7 +342,7 @@ DEFINE_JSON_FROM_TAG(response_t)
     else if (instance.jsonrpc == version::v1 ||
         instance.jsonrpc == version::undefined)
     {
-        object["result"] = boost::json::value{};
+        object["result"] = json_t{};
     }
 
     value = object;

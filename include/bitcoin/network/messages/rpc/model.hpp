@@ -46,9 +46,11 @@ using string_t = std::string;
 using array_t = std::vector<value_t>;
 using object_t = std::unordered_map<string_t, value_t>;
 using any_t = rpc::any;
+using json_t = boost::json::value;
 
 struct value_t
 {
+    /// 88 bytes (object_t).
     using inner_t = std::variant
     <
         /// json-rpc
