@@ -112,6 +112,11 @@ DEFINE_JSON_FROM_TAG(value_t)
         {
             value = visit;
         },
+        [&](const json_t& visit) NOEXCEPT
+        {
+            // This is a deep copy.
+            value = visit;
+        },
         [&](const array_t& visit) THROWS
         {
             value.emplace_array();
