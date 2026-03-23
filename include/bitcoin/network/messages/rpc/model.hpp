@@ -46,9 +46,11 @@ using string_t = std::string;
 using array_t = std::vector<value_t>;
 using object_t = std::unordered_map<string_t, value_t>;
 using any_t = rpc::any;
+using json_t = boost::json::value;
 
 struct value_t
 {
+    /// 88 bytes (object_t).
     using inner_t = std::variant
     <
         /// json-rpc
@@ -72,7 +74,10 @@ struct value_t
         
         /// type-erased shared_ptr<Type>, not json deserializable.
         /// Pass ptr via any_t and specify it directly in the handler.
-        any_t
+        any_t,
+
+        /// Embeds json DOM.
+        json_t
     >;
 
     /// Explicit initialization constructors.
@@ -94,6 +99,8 @@ struct value_t
     value_t(uint16_t value) NOEXCEPT : inner_{ value } {}
     value_t(uint32_t value) NOEXCEPT : inner_{ value } {}
     value_t(uint64_t value) NOEXCEPT : inner_{ value } {}
+    value_t(const json_t& value) NOEXCEPT : inner_{ value } {}
+    value_t(json_t&& value) NOEXCEPT : inner_{ std::move(value) } {}
     value_t(const any_t& value) NOEXCEPT : inner_{ value } {}
     value_t(any_t&& value) NOEXCEPT : inner_{ std::move(value) } {}
 
@@ -113,6 +120,7 @@ struct value_t
     ALTERNATIVE_VARIANT_ASSIGNMENT(value_t, uint16_t, inner_)
     ALTERNATIVE_VARIANT_ASSIGNMENT(value_t, uint32_t, inner_)
     ALTERNATIVE_VARIANT_ASSIGNMENT(value_t, uint64_t, inner_)
+    ALTERNATIVE_VARIANT_ASSIGNMENT(value_t, json_t, inner_)
     ALTERNATIVE_VARIANT_ASSIGNMENT(value_t, any_t, inner_)
         
     inner_t& value() NOEXCEPT
