@@ -58,20 +58,26 @@ public:
     inline void send(const Message& message, result_handler&& handler) NOEXCEPT
     {
         BC_ASSERT(stranded());
+        using namespace messages::peer;
 
         // TODO: move to serializer.
         const auto magic = settings().identifier;
         const auto version = negotiated_version();
-        const auto ptr = messages::peer::serialize(message, magic, version);
+        const auto payload = serialize(message, magic, version);
+
+        LOGX("Sent " << heading::get_command(*payload) << " to ["
+            << endpoint() << "] (" << system::floored_subtract(payload->size(),
+            heading::command_size) << " bytes)");
 
         using namespace std::placeholders;
         count_handler complete = std::bind(&channel_peer::handle_send,
-            shared_from_base<channel_peer>(),  _1, _2, ptr, std::move(handler));
+            shared_from_base<channel_peer>(),  _1, _2, payload,
+            std::move(handler));
 
-        if (!ptr)
+        if (!payload)
             complete(error::bad_alloc, {});
         else
-            write({ ptr->data(), ptr->size() }, std::move(complete));
+            write({ payload->data(), payload->size() }, std::move(complete));
     }
 
     /// Construct a p2p channel to encapsulate and communicate on the socket.
@@ -138,7 +144,8 @@ protected:
 
 private:
     void log_message(const std::string_view& name, size_t size) const NOEXCEPT;
-    void handle_send(const code& ec, size_t size, const system::chunk_cptr&,
+    void handle_send(const code& ec, size_t size,
+        const system::chunk_cptr& payload,
         const result_handler& handler) NOEXCEPT;
 
     // Only passes static member get_area(), so safe to use statically.

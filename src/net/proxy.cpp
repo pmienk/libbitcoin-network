@@ -283,7 +283,7 @@ void proxy::do_write(const asio::const_buffer& payload,
     total_ = ceilinged_add(total_.load(), payload.size());
     backlog_ = ceilinged_add(backlog_.load(), payload.size());
 
-    LOGX("Queue for [" << endpoint() << "]: " << queue_.size()
+    LOGV("Queue for [" << endpoint() << "]: " << queue_.size()
         << " (" << backlog_.load() << " of " << total_.load() << " bytes)");
 
     // Start the loop if it wasn't already started.
@@ -322,7 +322,7 @@ void proxy::handle_write(const code& ec, size_t bytes,
     backlog_ = floored_subtract(backlog_.load(), queue_.front().first.size());
     queue_.pop_front();
 
-    LOGX("Dequeue for [" << endpoint() << "]: " << queue_.size()
+    LOGV("Dequeue for [" << endpoint() << "]: " << queue_.size()
         << " (" << backlog_.load() << " backlog)");
 
     // All handlers must be invoked, so continue regardless of error state.
@@ -345,11 +345,6 @@ void proxy::handle_write(const code& ec, size_t bytes,
         handler(ec, {});
         return;
     }
-
-    // BUGBUG: payload changed from data_chunk_ptr to const_buffer.
-    // TODO: messages dependency, move to channel.
-    ////LOGX("Sent " <<  heading::get_command(*payload) << " to ["
-    ////    << endpoint() << "] (" << payload->size() << " bytes)");
 
     handler(ec, bytes);
 }

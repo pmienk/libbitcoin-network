@@ -317,10 +317,20 @@ void channel_peer::handle_read_payload(const code& ec, size_t payload_size,
 }
 
 void channel_peer::handle_send(const code& ec, size_t,
-    const system::chunk_cptr&, const result_handler& handler) NOEXCEPT
+    const system::chunk_cptr& payload, const result_handler& handler) NOEXCEPT
 {
     if (ec)
         stop(ec);
+
+    if (ec &&
+        ec != error::peer_disconnect &&
+        ec != error::operation_canceled &&
+        ec != error::connect_failed)
+    {
+        LOGF("Send failure " << heading::get_command(*payload) << " to ["
+            << endpoint() << "] (" << system::floored_subtract(payload->size(),
+                heading::command_size) << " bytes) " << ec.message());
+    }
 
     handler(ec);
 }
