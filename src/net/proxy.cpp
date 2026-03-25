@@ -346,11 +346,6 @@ void proxy::handle_write(const code& ec, size_t bytes,
         return;
     }
 
-    // BUGBUG: payload changed from data_chunk_ptr to const_buffer.
-    // TODO: messages dependency, move to channel.
-    ////LOGX("Sent " <<  heading::get_command(*payload) << " to ["
-    ////    << endpoint() << "] (" << payload->size() << " bytes)");
-
     handler(ec, bytes);
 }
 
