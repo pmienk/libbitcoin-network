@@ -328,24 +328,6 @@ void proxy::handle_write(const code& ec, size_t bytes,
     // All handlers must be invoked, so continue regardless of error state.
     // Handlers are invoked in queued order, after all outstanding complete.
     write();
-
-    if (ec)
-    {
-        // Linux reports error::connect_failed when peer drops here.
-        if (ec != error::peer_disconnect && ec != error::operation_canceled &&
-            ec != error::connect_failed)
-        {
-            // BUGBUG: payload changed from data_chunk_ptr to const_buffer.
-            // TODO: messages dependency, move to channel.
-            ////LOGF("Send failure " << heading::get_command(*payload) << " to ["
-            ////    << endpoint() << "] (" << payload->size() << " bytes) "
-            ////    << ec.message());
-        }
-
-        handler(ec, {});
-        return;
-    }
-
     handler(ec, bytes);
 }
 
