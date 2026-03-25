@@ -278,6 +278,9 @@ void channel_peer::handle_read_payload(const code& ec, size_t payload_size,
         }
     }
 
+    LOGX("Recv " << head->command << " from [" << endpoint() << "] ("
+        << payload_size << " bytes)");
+
     // Notify subscribers of the new message.
     ///////////////////////////////////////////////////////////////////////////
     // TODO: hack, move into peer::body::reader.
@@ -309,9 +312,6 @@ void channel_peer::handle_read_payload(const code& ec, size_t payload_size,
         payload_buffer_.resize(options().minimum_buffer);
         payload_buffer_.shrink_to_fit();
     }
-
-    LOGX("Recv " << head->command << " from [" << endpoint() << "] ("
-        << payload_size << " bytes)");
 
     read_heading();
 }
