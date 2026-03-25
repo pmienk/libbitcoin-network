@@ -82,7 +82,7 @@ void protocol_version_70016::shake(result_handler&& handle_event) NOEXCEPT
     protocol_version_70001::shake(std::move(handle_event));
 }
 
-// Incoming [send_address_v2    => negotiated state change].
+// Incoming [send_address_v2     => negotiated state change].
 // Incoming [witness_tx_id_relay => negotiated state change].
 // ----------------------------------------------------------------------------
 
