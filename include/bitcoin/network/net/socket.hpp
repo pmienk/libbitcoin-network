@@ -161,8 +161,8 @@ public:
     /// Properties.
     /// -----------------------------------------------------------------------
 
-    /// TODO: this can be set to the binding for incoming sockets.
-    /// Get the address of the outgoing endpoint passed via construct.
+    /// Get the address of the outgoing endpoint passed via construct, or the
+    /// resolved endpoint address for incoming connections.
     virtual const config::address& address() const NOEXCEPT;
 
     /// Get the endpoint of the remote host. Established by connection
