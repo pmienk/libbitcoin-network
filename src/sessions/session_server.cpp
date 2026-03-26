@@ -138,7 +138,7 @@ code session_server::do_accept(const config::authorities& binds,
 // Accept cycle.
 // ----------------------------------------------------------------------------
 
-// Attempt to accept peers on each configured endpoint.
+// Attempt to accept clients on each configured endpoint.
 void session_server::start_accept(const code&,
     const acceptor::ptr& acceptor, bool secure) NOEXCEPT
 {
@@ -205,7 +205,7 @@ void session_server::handle_accepted(const code& ec, const socket::ptr& socket,
 
     if (!whitelisted(socket->address()))
     {
-        ////LOGS("Dropping not whitelisted peer [" << socket->endpoint() << "].");
+        LOGV("Dropping not whitelisted client [" << socket->endpoint() << "].");
         socket->stop();
         start_accept(error::success, acceptor, secure);
         return;
@@ -213,7 +213,7 @@ void session_server::handle_accepted(const code& ec, const socket::ptr& socket,
 
     if (blacklisted(socket->address()))
     {
-        ////LOGS("Dropping blacklisted peer [" << socket->endpoint() << "].");
+        LOGV("Dropping blacklisted client [" << socket->endpoint() << "].");
         socket->stop();
         start_accept(error::success, acceptor, secure);
         return;

@@ -83,6 +83,7 @@ void socket::handle_accept(boost_code ec,
     }
 
     endpoint_ = { std::get<asio::socket>(socket_).remote_endpoint(ec) };
+    address_ = endpoint_;
 
     if (ec)
     {

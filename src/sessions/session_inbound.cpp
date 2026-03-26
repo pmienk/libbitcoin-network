@@ -174,7 +174,7 @@ void session_inbound::handle_accepted(const code& ec,
 
     if (!whitelisted(socket->address()))
     {
-        ////LOGS("Dropping not whitelisted peer [" << socket->endpoint() << "].");
+        LOGV("Dropping not whitelisted peer [" << socket->endpoint() << "].");
         socket->stop();
         start_accept(error::success, acceptor);
         return;
@@ -182,7 +182,7 @@ void session_inbound::handle_accepted(const code& ec,
 
     if (blacklisted(socket->address()))
     {
-        ////LOGS("Dropping blacklisted peer [" << socket->endpoint() << "].");
+        LOGV("Dropping blacklisted peer [" << socket->endpoint() << "].");
         socket->stop();
         start_accept(error::success, acceptor);
         return;
