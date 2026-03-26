@@ -304,11 +304,11 @@ inline void hosts::push(const std::string& line) NOEXCEPT
         }
         else if (settings_.blacklisted(item))
         {
-            LOGF("Address blacklisted upon load [" << line << "].");
+            LOGV("Address blacklisted upon load [" << line << "].");
         }
         else if (!settings_.whitelisted(item))
         {
-            LOGF("Address not whitelisted upon load [" << line << "].");
+            LOGV("Address not whitelisted upon load [" << line << "].");
         }
         else
         {
