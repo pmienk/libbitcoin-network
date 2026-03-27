@@ -34,7 +34,9 @@ namespace peer {
 struct BCT_API get_data
 {
     typedef std::shared_ptr<const get_data> cptr;
+    typedef inventory_item::selector selector;
     typedef inventory_item::type_id type_id;
+    typedef inventory_item item;
 
     static const identifier id;
     static const std::string command;
@@ -54,9 +56,11 @@ struct BCT_API get_data
     size_t size(uint32_t version) const NOEXCEPT;
 
     // inventory implements the same methods.
-    auto view(type_id type) const NOEXCEPT;
+    inline auto view(type_id type) const NOEXCEPT;
+    inventory_items select(selector types) const NOEXCEPT;
     inventory_items filter(type_id type) const NOEXCEPT;
     system::hashes to_hashes(type_id type) const NOEXCEPT;
+    size_t count(selector type) const NOEXCEPT;
     size_t count(type_id type) const NOEXCEPT;
     bool any(type_id type) const NOEXCEPT;
     bool any_transaction() const NOEXCEPT;
@@ -68,9 +72,9 @@ struct BCT_API get_data
 
 inline auto get_data::view(type_id type) const NOEXCEPT
 {
-    const auto is_type = [type](const auto& item) NOEXCEPT
+    const auto is_type = [type](const inventory_item& item) NOEXCEPT
     {
-        return item.type == type;
+        return item.is_type(type);
     };
 
     return std::ranges::filter_view(items, is_type);

@@ -95,32 +95,71 @@ void inventory_item::serialize(uint32_t BC_DEBUG_ONLY(version),
     BC_ASSERT(sink && sink.get_write_position() - start == bytes);
 }
 
+bool inventory_item::is_txid() const NOEXCEPT
+{
+    return is_type(type_id::witness_tx)
+        || is_type(type_id::transaction);
+}
+
+bool inventory_item::is_wtxid() const NOEXCEPT
+{
+    return is_type(type_id::wtxid);
+}
+
+bool inventory_item::is_block() const NOEXCEPT
+{
+    return is_type(type_id::block)
+        || is_type(type_id::witness_block);
+}
+
+bool inventory_item::is_filter() const NOEXCEPT
+{
+    return is_type(type_id::filtered)
+        || is_type(type_id::witness_filtered);
+}
+
+bool inventory_item::is_selected(selector types) const NOEXCEPT
+{
+    switch (types)
+    {
+        case selector::txids: return is_txid();
+        case selector::wtxids: return is_wtxid();
+        case selector::blocks: return is_block();
+        case selector::filters: return is_filter();
+        default: return false;
+    };
+}
+
 bool inventory_item::is_block_type() const NOEXCEPT
 {
-    // Filtered are bip37, effectively deprecated by bip111.
-    return type == type_id::witness_block
-        || type == type_id::witness_compact
-        || type == type_id::witness_filtered
-        || type == type_id::block
-        || type == type_id::compact
-        || type == type_id::filtered;
+    return is_type(type_id::witness_block)
+        || is_type(type_id::witness_compact)
+        || is_type(type_id::witness_filtered)
+        || is_type(type_id::block)
+        || is_type(type_id::compact)
+        || is_type(type_id::filtered);
 }
 
 bool inventory_item::is_transaction_type() const NOEXCEPT
 {
     // Only wtxid corresponds to a witness hash.
-    return type == type_id::witness_tx
-        || type == type_id::transaction
-        || type == type_id::wtxid;
+    return is_type(type_id::witness_tx)
+        || is_type(type_id::transaction)
+        || is_type(type_id::wtxid);
 }
 
 bool inventory_item::is_witness_type() const NOEXCEPT
 {
     // wtxid excluded
-    return type == type_id::witness_tx
-        || type == type_id::witness_block
-        || type == type_id::witness_compact
-        || type == type_id::witness_filtered;
+    return is_type(type_id::witness_tx)
+        || is_type(type_id::witness_block)
+        || is_type(type_id::witness_compact)
+        || is_type(type_id::witness_filtered);
+}
+
+bool inventory_item::is_type(type_id id) const NOEXCEPT
+{
+    return type == id;
 }
 
 bool operator==(const inventory_item& left, const inventory_item& right) NOEXCEPT

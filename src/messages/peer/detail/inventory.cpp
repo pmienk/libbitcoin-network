@@ -48,7 +48,7 @@ inventory inventory::factory(hashes&& hashes, type_id type) NOEXCEPT
     std::transform(hashes.begin(), hashes.end(), items.begin(),
         [=](hash_digest& hash) NOEXCEPT
         {
-            return inventory_item{ type, std::move(hash) };
+            return item{ type, std::move(hash) };
         });
 
     return { items };
@@ -62,7 +62,7 @@ inventory inventory::factory(const hashes& hashes, type_id type) NOEXCEPT
     std::transform(hashes.begin(), hashes.end(), items.begin(),
         [=](const hash_digest& hash) NOEXCEPT
         {
-            return inventory_item{ type, hash };
+            return item{ type, hash };
         });
 
     return { items };
@@ -88,8 +88,8 @@ inventory inventory::deserialize(uint32_t version, reader& source) NOEXCEPT
     inventory_items items;
     items.reserve(size);
 
-    for (size_t item = 0; item < size; ++item)
-        items.push_back(inventory_item::deserialize(version, source));
+    for (size_t item{}; item < size; ++item)
+        items.push_back(item::deserialize(version, source));
 
     return { items };
 }
@@ -119,12 +119,24 @@ void inventory::serialize(uint32_t version, writer& sink) const NOEXCEPT
 size_t inventory::size(uint32_t version) const NOEXCEPT
 {
     return variable_size(items.size()) +
-        (items.size() * inventory_item::size(version));
+        (items.size() * item::size(version));
+}
+
+inventory_items inventory::select(selector types) const NOEXCEPT
+{
+    inventory_items out{};
+    out.reserve(count(types));
+
+    for (const auto& item: items)
+        if (item.is_selected(types))
+            out.push_back(item);
+
+    return out;
 }
 
 inventory_items inventory::filter(type_id type) const NOEXCEPT
 {
-    inventory_items out;
+    inventory_items out{};
     out.reserve(count(type));
 
     for (const auto& item: items)
@@ -136,7 +148,7 @@ inventory_items inventory::filter(type_id type) const NOEXCEPT
 
 hashes inventory::to_hashes(type_id type) const NOEXCEPT
 {
-    hashes out;
+    hashes out{};
     out.reserve(count(type));
 
     for (const auto& item: items)
@@ -146,11 +158,21 @@ hashes inventory::to_hashes(type_id type) const NOEXCEPT
     return out;
 }
 
+size_t inventory::count(selector type) const NOEXCEPT
+{
+    const auto is_selected = [type](const inventory_item& item)
+    {
+        return item.is_selected(type);
+    };
+
+    return std::count_if(items.begin(), items.end(), is_selected);
+}
+
 size_t inventory::count(type_id type) const NOEXCEPT
 {
-    const auto is_type = [type](const inventory_item& item)
+    const auto is_type = [type](const item& item)
     {
-        return item.type == type;
+        return item.is_type(type);
     };
 
     return std::count_if(items.begin(), items.end(), is_type);
@@ -158,9 +180,9 @@ size_t inventory::count(type_id type) const NOEXCEPT
 
 bool inventory::any(type_id type) const NOEXCEPT
 {
-    const auto is_type = [type](const inventory_item& item)
+    const auto is_type = [type](const item& item)
     {
-        return item.type == type;
+            return item.is_type(type);
     };
 
     return std::any_of(items.begin(), items.end(), is_type);
@@ -168,7 +190,7 @@ bool inventory::any(type_id type) const NOEXCEPT
 
 bool inventory::any_transaction() const NOEXCEPT
 {
-    const auto is_transaction = [](const inventory_item& item)
+    const auto is_transaction = [](const item& item)
     {
         return item.is_transaction_type();
     };
@@ -178,7 +200,7 @@ bool inventory::any_transaction() const NOEXCEPT
 
 bool inventory::any_block() const NOEXCEPT
 {
-    const auto is_block = [](const inventory_item& item)
+    const auto is_block = [](const item& item)
     {
         return item.is_block_type();
     };
@@ -188,7 +210,7 @@ bool inventory::any_block() const NOEXCEPT
 
 bool inventory::any_witness() const NOEXCEPT
 {
-    const auto is_witness = [](const inventory_item& item)
+    const auto is_witness = [](const item& item)
     {
         return item.is_witness_type();
     };

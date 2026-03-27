@@ -32,17 +32,27 @@ struct BCT_API inventory_item
 {
     typedef std::shared_ptr<const inventory_item> cptr;
 
+    /// Logical type selection.
+    enum class selector
+    {
+        txids,
+        wtxids,
+        blocks,
+        filters
+    };
+
+    /// Serializeable type id.
     enum class type_id : uint32_t
     {
-        // It's so dumb that these are not flags (so use class enum).
-        error            = 0,
-        transaction      = 1,
-        block            = 2,
-        filtered         = 3,
-        compact          = 4,
-        wtxid            = 5,
+        // It's so dumb that these are not flags.
+        error       = 0,
+        transaction = 1,
+        block       = 2,
+        filtered    = 3,
+        compact     = 4,
+        wtxid       = 5,
 
-        // And yet this is a flag, but excludes wtxid.
+        // But witness is a flag.
         witness          = system::bit_right<uint32_t>(30),
         witness_tx       = witness | transaction,
         witness_block    = witness | block,
@@ -59,9 +69,18 @@ struct BCT_API inventory_item
         system::reader& source) NOEXCEPT;
     void serialize(uint32_t version, system::writer& sink) const NOEXCEPT;
 
+    /// These indicate relevance to a specific object identifier.
+    bool is_txid() const NOEXCEPT;
+    bool is_wtxid() const NOEXCEPT;
+    bool is_block() const NOEXCEPT;
+    bool is_filter() const NOEXCEPT;
+    bool is_selected(selector types) const NOEXCEPT;
+
+    /// These indicate context, not object identifier.
     bool is_block_type() const NOEXCEPT;
     bool is_transaction_type() const NOEXCEPT;
     bool is_witness_type() const NOEXCEPT;
+    bool is_type(type_id id) const NOEXCEPT;
 
     type_id type;
     system::hash_digest hash;
