@@ -72,8 +72,8 @@ BOOST_AUTO_TEST_CASE(get_data__select__selectors__expected_items)
 
     const auto txs = inv.select(inventory_item::selector::txids);
     BOOST_REQUIRE_EQUAL(txs.size(), 2u);
-    BOOST_CHECK(txs[0].type == inventory_item::type_id::transaction);
-    BOOST_CHECK(txs[1].type == inventory_item::type_id::witness_tx);
+    BOOST_CHECK(txs[0].type == inventory_item::type_id::witness_tx);
+    BOOST_CHECK(txs[1].type == inventory_item::type_id::transaction);
 
     const auto wtxs = inv.select(inventory_item::selector::wtxids);
     BOOST_REQUIRE_EQUAL(wtxs.size(), 1u);
@@ -81,8 +81,8 @@ BOOST_AUTO_TEST_CASE(get_data__select__selectors__expected_items)
 
     const auto blocks = inv.select(inventory_item::selector::blocks);
     BOOST_REQUIRE_EQUAL(blocks.size(), 2u);
-    BOOST_CHECK(blocks[0].type == inventory_item::type_id::block);
-    BOOST_CHECK(blocks[1].type == inventory_item::type_id::witness_block);
+    BOOST_CHECK(blocks[0].type == inventory_item::type_id::witness_block);
+    BOOST_CHECK(blocks[1].type == inventory_item::type_id::block);
 
     const auto filters = inv.select(inventory_item::selector::filters);
     BOOST_REQUIRE_EQUAL(filters.size(), 1u);

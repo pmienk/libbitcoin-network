@@ -19,6 +19,7 @@
 #include <bitcoin/network/messages/peer/detail/get_data.hpp>
 
 #include <algorithm>
+#include <ranges>
 #include <bitcoin/network/messages/peer/enums/identifier.hpp>
 #include <bitcoin/network/messages/peer/enums/level.hpp>
 #include <bitcoin/network/messages/peer/enums/magic_numbers.hpp>
@@ -92,12 +93,13 @@ size_t get_data::size(uint32_t version) const NOEXCEPT
         (items.size() * item::size(version));
 }
 
+// Populated in reverse order for efficient removals.
 inventory_items get_data::select(selector types) const NOEXCEPT
 {
     inventory_items out{};
     out.reserve(count(types));
-
-    for (const auto& item: items)
+    
+    for (const auto& item: std::views::reverse(items))
         if (item.is_selected(types))
             out.push_back(item);
 
