@@ -109,24 +109,6 @@ size_t headers::size(uint32_t) const NOEXCEPT
         (header_ptrs.size() * (chain::header::serialized_size() + sizeof(trail)));
 }
 
-bool headers::is_sequential() const NOEXCEPT
-{
-    if (header_ptrs.empty())
-        return true;
-
-    auto previous = header_ptrs.front()->hash();
-
-    for (auto it = std::next(header_ptrs.begin()); it != header_ptrs.end(); ++it)
-    {
-        if ((*it)->previous_block_hash() != previous)
-            return false;
-
-        previous = (*it)->hash();
-    }
-
-    return true;
-}
-
 hashes headers::to_hashes() const NOEXCEPT
 {
     hashes out{};
