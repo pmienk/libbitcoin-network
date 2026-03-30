@@ -273,7 +273,7 @@ void session_outbound::handle_channel_stop(const code& ec,
 
     reclaim(ec, channel);
 
-    // Cannot be tight loop due to handshake.
+    // May still be tight iteration given fast handshake failure.
     start_connect(ec);
 }
 
