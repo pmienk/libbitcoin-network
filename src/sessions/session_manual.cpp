@@ -212,8 +212,8 @@ void session_manual::handle_channel_stop(const code& ec,
         return;
     }
 
-    // Cannot be tight loop due to handshake.
-    start_connect(error::success, peer, connector, handler);
+    // Handshake failure creates tight loop (e.g. not whitelisted).
+    defer(BIND(start_connect, error::success, peer, connector, handler));
 }
 
 BC_POP_WARNING()
