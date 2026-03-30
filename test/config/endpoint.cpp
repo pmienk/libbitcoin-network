@@ -122,6 +122,24 @@ BOOST_AUTO_TEST_CASE(endpoint__construct__ipv6_port__expected_values)
     BOOST_REQUIRE_EQUAL(instance.to_lower(80), "[a::bc:def::123:45:6]:42");
 }
 
+BOOST_AUTO_TEST_CASE(endpoint__construct__ipv6_localhost_port__expected_values)
+{
+    endpoint instance("[::1]:42");
+    BOOST_REQUIRE_EQUAL(instance.host(), "[::1]");
+    BOOST_REQUIRE_EQUAL(instance.port(), 42u);
+    BOOST_REQUIRE_EQUAL(instance.to_string(), "[::1]:42");
+    BOOST_REQUIRE_EQUAL(instance.to_lower(), "[::1]:42");
+}
+
+BOOST_AUTO_TEST_CASE(endpoint__construct__ipv6_default__expected_values)
+{
+    endpoint instance("[::]");
+    BOOST_REQUIRE_EQUAL(instance.host(), "[::]");
+    BOOST_REQUIRE_EQUAL(instance.port(), 0u);
+    BOOST_REQUIRE_EQUAL(instance.to_string(), "[::]");
+    BOOST_REQUIRE_EQUAL(instance.to_lower(42), "[::]:42");
+}
+
 // to_local
 
 BOOST_AUTO_TEST_CASE(endpoint__to_local__host_port__expected_values)
