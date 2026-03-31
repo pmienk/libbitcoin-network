@@ -169,7 +169,6 @@ void channel_peer::read_heading() NOEXCEPT
 void channel_peer::handle_read_heading(const code& ec, size_t) NOEXCEPT
 {
     static constexpr uint32_t http_magic = 0x20544547;
-    static constexpr uint32_t https_magic = 0x02010316;
 
     BC_ASSERT(stranded());
 
@@ -204,15 +203,16 @@ void channel_peer::handle_read_heading(const code& ec, size_t) NOEXCEPT
 
     if (head->magic != settings().identifier)
     {
-        if (head->magic == http_magic || head->magic == https_magic)
+        if (head->magic == http_magic)
         {
-            LOGR("Http/s request from [" << endpoint() << "]");
+            LOGR("Http request from [" << endpoint() << "]");
         }
         else
         {
             LOGR("Invalid heading magic (0x"
                 << encode_base16(to_little_endian(head->magic))
-                << ") from [" << endpoint() << "]");
+                << ") from [" << endpoint()
+                << "] possibly encrypted connection to clear endpoint.");
         }
 
         stop(error::invalid_magic);
