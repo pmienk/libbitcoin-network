@@ -283,8 +283,8 @@ void proxy::do_write(const asio::const_buffer& payload,
     total_ = ceilinged_add(total_.load(), payload.size());
     backlog_ = ceilinged_add(backlog_.load(), payload.size());
 
-    LOGV("Queue for [" << endpoint() << "]: " << queue_.size()
-        << " (" << backlog_.load() << " of " << total_.load() << " bytes)");
+    ////LOGV("Queue for [" << endpoint() << "]: " << queue_.size()
+    ////    << " (" << backlog_.load() << " of " << total_.load() << " bytes)");
 
     // Start the loop if it wasn't already started.
     if (!started)
@@ -322,8 +322,8 @@ void proxy::handle_write(const code& ec, size_t bytes,
     backlog_ = floored_subtract(backlog_.load(), queue_.front().first.size());
     queue_.pop_front();
 
-    LOGV("Dequeue for [" << endpoint() << "]: " << queue_.size()
-        << " (" << backlog_.load() << " backlog)");
+    ////LOGV("Dequeue for [" << endpoint() << "]: " << queue_.size()
+    ////    << " (" << backlog_.load() << " backlog)");
 
     // All handlers must be invoked, so continue regardless of error state.
     // Handlers are invoked in queued order, after all outstanding complete.
