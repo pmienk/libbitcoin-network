@@ -128,6 +128,14 @@ struct value_t
     ALTERNATIVE_VARIANT_ASSIGNMENT(value_t, json_t, inner_)
     ALTERNATIVE_VARIANT_ASSIGNMENT(value_t, any_t, inner_)
 
+#if defined (HAVE_XCODE)
+    constexpr value_t& operator=(size_t value) NOEXCEPT
+    {
+        inner_ = system::possible_wide_cast<uint64_t>(value);
+        return *this;
+    }
+#endif
+
     inner_t& value() NOEXCEPT
     {
         return inner_;
