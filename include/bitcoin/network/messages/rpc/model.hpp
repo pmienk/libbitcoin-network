@@ -107,6 +107,9 @@ struct value_t
 #if defined (HAVE_XCODE)
     value_t(size_t value) NOEXCEPT : inner_{
         system::possible_wide_cast<uint64_t>(value) } {}
+    value_t(signed_size_t value) NOEXCEPT : inner_{
+        system::possible_wide_cast<int64_t>(value) } {
+    }
 #endif
 
     /// Forwarding constructors for in-place variant construction.
@@ -132,6 +135,11 @@ struct value_t
     constexpr value_t& operator=(size_t value) NOEXCEPT
     {
         inner_ = system::possible_wide_cast<uint64_t>(value);
+        return *this;
+    }
+    constexpr value_t& operator=(signed_size_t value) NOEXCEPT
+    {
+        inner_ = system::possible_wide_cast<int64_t>(value);
         return *this;
     }
 #endif
