@@ -23,7 +23,7 @@ endif()
 # Project options.
 #------------------------------------------------------------------------------
 option( with-ssl "Use embedded ssl library." ON )
-option( with-test "Build test." ON )
+option( with-tests "Build tests." ON )
 
 #------------------------------------------------------------------------------
 # Dependencies.
@@ -215,15 +215,15 @@ set_target_properties( libbitcoin-network
 )
 
 #------------------------------------------------------------------------------
-# libbitcoin-network-tests tests
+# libbitcoin-network-test tests
 #------------------------------------------------------------------------------
-if ( with-test )
-  add_executable( libbitcoin-network-tests )
+if ( with-tests )
+  add_executable( libbitcoin-network-test )
 
   enable_testing()
 
-  add_test( NAME libbitcoin-network-tests
-    COMMAND libbitcoin-network-tests
+  add_test( NAME libbitcoin-network-test
+    COMMAND libbitcoin-network-test
     --run_test=*
     --log_level=warning
     --show_progress=no
@@ -232,12 +232,12 @@ if ( with-test )
     --build_info=yes
   )
 
-  target_compile_features( libbitcoin-network-tests
+  target_compile_features( libbitcoin-network-test
     PUBLIC
       cxx_std_20
   )
 
-  target_compile_options( libbitcoin-network-tests
+  target_compile_options( libbitcoin-network-test
     PRIVATE
       -Wall
       -Wextra
@@ -253,43 +253,43 @@ if ( with-test )
       -fstack-protector-all
   )
 
-  target_compile_definitions( libbitcoin-network-tests
+  target_compile_definitions( libbitcoin-network-test
     PRIVATE
       $<$<BOOL:${with-ssl}>:CERT_PREFIX="${repository_root_dir}/test/ssl/wolfssl/wolfcrypt/test/">
   )
 
-  file( GLOB_RECURSE libbitcoin_network_tests_HEADERS CONFIGURE_DEPENDS
+  file( GLOB_RECURSE libbitcoin_network_test_HEADERS CONFIGURE_DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/../../test/*.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/../../test/*.hpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/../../test/*.ipp"
   )
 
-  file( GLOB_RECURSE libbitcoin_network_tests_HEADERS_SSL CONFIGURE_DEPENDS
+  file( GLOB_RECURSE libbitcoin_network_test_HEADERS_SSL CONFIGURE_DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/../../test/ssl/wolfssl/*.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/../../test/ssl/wolfssl/*.hpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/../../test/ssl/wolfssl/*.ipp"
   )
 
   if ( !with-ssl )
-    list( REMOVE_ITEM libbitcoin_network_tests_HEADERS ${libbitcoin_network_tests_HEADERS_SSL} )
+    list( REMOVE_ITEM libbitcoin_network_test_HEADERS ${libbitcoin_network_test_HEADERS_SSL} )
   endif()
 
-  file( GLOB_RECURSE libbitcoin_network_tests_SOURCES CONFIGURE_DEPENDS
+  file( GLOB_RECURSE libbitcoin_network_test_SOURCES CONFIGURE_DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/../../test/*.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/../../test/*.cpp"
   )
 
-  target_sources( libbitcoin-network-tests
+  target_sources( libbitcoin-network-test
     PRIVATE
       FILE_SET HEADERS
       BASE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/../../test"
       FILES
-        ${libbitcoin_network_tests_HEADERS}
+        ${libbitcoin_network_test_HEADERS}
     PRIVATE
-      ${libbitcoin_network_tests_SOURCES}
+      ${libbitcoin_network_test_SOURCES}
   )
 
-  target_include_directories( libbitcoin-network-tests
+  target_include_directories( libbitcoin-network-test
     PRIVATE
       $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../../test>
       $<$<BOOL:${with-ssl}>:
@@ -297,13 +297,13 @@ if ( with-test )
       >
   )
 
-  target_link_libraries( libbitcoin-network-tests
+  target_link_libraries( libbitcoin-network-test
     PRIVATE
       Boost::unit_test_framework
       bitcoin::network
   )
 
-  set_target_properties( libbitcoin-network-tests
+  set_target_properties( libbitcoin-network-test
     PROPERTIES
       VERSION ${PROJECT_VERSION}
       SOVERSION ${PROJECT_VERSION_MAJOR}
