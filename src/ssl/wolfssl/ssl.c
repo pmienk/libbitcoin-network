@@ -5105,12 +5105,12 @@ int wolfSSL_GetCipherType(WOLFSSL* ssl)
         return BAD_FUNC_ARG;
 
 #ifndef WOLFSSL_AEAD_ONLY
-    if (ssl->specs.cipher_type == block)
+    if (ssl->specs.cipher_type == wolf__block)
         return WOLFSSL_BLOCK_TYPE;
-    if (ssl->specs.cipher_type == stream)
+    if (ssl->specs.cipher_type == wolf__stream)
         return WOLFSSL_STREAM_TYPE;
 #endif
-    if (ssl->specs.cipher_type == aead)
+    if (ssl->specs.cipher_type == wolf__aead)
         return WOLFSSL_AEAD_TYPE;
 
     return WOLFSSL_FATAL_ERROR;
@@ -5152,7 +5152,7 @@ int wolfSSL_GetHmacSize(WOLFSSL* ssl)
 {
     /* AEAD ciphers don't have HMAC keys */
     if (ssl)
-        return (ssl->specs.cipher_type != aead) ? ssl->specs.hash_size : 0;
+        return (ssl->specs.cipher_type != wolf__aead) ? ssl->specs.hash_size : 0;
 
     return BAD_FUNC_ARG;
 }
@@ -16076,7 +16076,7 @@ char* wolfSSL_CIPHER_description(const WOLFSSL_CIPHER* cipher, char* in,
     authStr = wolfssl_sigalg_to_string(cipher->ssl->specs.sig_algo);
     encStr = wolfssl_cipher_to_string(cipher->ssl->specs.bulk_cipher_algorithm,
                                       cipher->ssl->specs.key_size);
-    if (cipher->ssl->specs.cipher_type == aead)
+    if (cipher->ssl->specs.cipher_type == wolf__aead)
         macStr = "AEAD";
     else
         macStr = wolfssl_mac_to_string(cipher->ssl->specs.mac_algorithm);
