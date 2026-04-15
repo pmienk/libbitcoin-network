@@ -2030,7 +2030,7 @@ int wolfSSL_session_import_internal(WOLFSSL* ssl, const unsigned char* buf,
     }
 
     /* do not allow stream ciphers with DTLS, except for NULL cipher */
-    if (ret == 0 && ssl->specs.cipher_type == stream &&
+    if (ret == 0 && ssl->specs.cipher_type == wolf__stream &&
         ssl->specs.bulk_cipher_algorithm != wolfssl_cipher_null) {
         WOLFSSL_MSG("Can not import stream ciphers for DTLS");
         ret = SANITY_CIPHER_E;
@@ -8907,7 +8907,7 @@ void FreeHandshakeResources(WOLFSSL* ssl)
     /* RNG */
     if (ssl->options.tls1_1 == 0
 #ifndef WOLFSSL_AEAD_ONLY
-        || ssl->specs.cipher_type == stream
+        || ssl->specs.cipher_type == wolf__stream
 #endif
 #if defined(WOLFSSL_TLS13)
     /* Post-handshake auth requires random on client side for TLS 1.3.
@@ -20806,7 +20806,7 @@ static WC_INLINE int CipherHasExpIV(WOLFSSL *ssl)
     if (ssl->options.tls1_3)
         return 0;
 #endif
-    return (ssl->specs.cipher_type == aead) &&
+    return (ssl->specs.cipher_type == wolf__aead) &&
             (ssl->specs.bulk_cipher_algorithm != wolfssl_chacha);
 }
 
@@ -20816,7 +20816,7 @@ static int SanityCheckCipherText(WOLFSSL* ssl, word32 encryptSz)
     word32 minLength = MacSize(ssl);
 
 #ifndef WOLFSSL_AEAD_ONLY
-    if (ssl->specs.cipher_type == block) {
+    if (ssl->specs.cipher_type == wolf__block) {
 #ifdef HAVE_ENCRYPT_THEN_MAC
         if (ssl->options.startedETMRead) {
             if ((encryptSz - MacSize(ssl)) % ssl->specs.block_size) {
@@ -20843,7 +20843,7 @@ static int SanityCheckCipherText(WOLFSSL* ssl, word32 encryptSz)
     }
     else
 #endif
-    if (ssl->specs.cipher_type == aead) {
+    if (ssl->specs.cipher_type == wolf__aead) {
         minLength = ssl->specs.aead_mac_size;    /* authTag size */
         if (CipherHasExpIV(ssl))
             minLength += AESGCM_EXP_IV_SZ;       /* explicit IV  */
@@ -21890,7 +21890,7 @@ static WC_INLINE int VerifyMac(WOLFSSL* ssl, const byte* input, word32 msgSz,
 
     XMEMSET(verify, 0, WC_MAX_DIGEST_SIZE);
 
-    if (ssl->specs.cipher_type == block) {
+    if (ssl->specs.cipher_type == wolf__block) {
         pad = input[msgSz - 1];
         padByte = 1;
 
@@ -21941,7 +21941,7 @@ static WC_INLINE int VerifyMac(WOLFSSL* ssl, const byte* input, word32 msgSz,
             }
         }
     }
-    else if (ssl->specs.cipher_type == stream) {
+    else if (ssl->specs.cipher_type == wolf__stream) {
         ret = ssl->hmac(ssl, verify, input, msgSz - digestSz, -1, content, 1,
                         PEER_ORDER);
         if (ConstantCompare(verify, input + msgSz - digestSz, (int)digestSz) != 0) {
@@ -21955,7 +21955,7 @@ static WC_INLINE int VerifyMac(WOLFSSL* ssl, const byte* input, word32 msgSz,
     }
 #endif /* !WOLFSSL_NO_TLS12 && !WOLFSSL_AEAD_ONLY */
 
-    if (ssl->specs.cipher_type == aead) {
+    if (ssl->specs.cipher_type == wolf__aead) {
         *padSz = ssl->specs.aead_mac_size;
     }
 #if !defined(WOLFSSL_NO_TLS12) && !defined(WOLFSSL_AEAD_ONLY)
@@ -22036,7 +22036,7 @@ static int removeMsgInnerPadding(WOLFSSL* ssl)
 {
     word32 i = ssl->buffers.inputBuffer.idx +
         ssl->curSize;
-    if (ssl->specs.cipher_type == aead)
+    if (ssl->specs.cipher_type == wolf__aead)
         i -= ssl->specs.aead_mac_size;
     else
         i -= ssl->keys.padSz + MacSize(ssl);
@@ -22611,7 +22611,7 @@ default:
                     /* handle success */
                 #ifndef WOLFSSL_AEAD_ONLY
                     if (ssl->options.tls1_1 &&
-                            ssl->specs.cipher_type == block) {
+                            ssl->specs.cipher_type == wolf__block) {
                         ssl->buffers.inputBuffer.idx += ssl->specs.block_size;
                         ssl->curSize -= ssl->specs.block_size;
                     }
@@ -22737,7 +22737,7 @@ default:
                     /* With atomicUser the callback should have already included
                      * the mac in the padding size. The ETM callback doesn't do
                      * this for some reason. */
-                    if (ssl->specs.cipher_type != aead
+                    if (ssl->specs.cipher_type != wolf__aead
 #ifdef ATOMIC_USER
                              && (!atomicUser
 #ifdef HAVE_ENCRYPT_THEN_MAC
@@ -23902,7 +23902,7 @@ int BuildMessage(WOLFSSL* ssl, byte* output, int outSz, const byte* input,
         #endif
 
         #ifndef WOLFSSL_AEAD_ONLY
-            if (ssl->specs.cipher_type == block) {
+            if (ssl->specs.cipher_type == wolf__block) {
                 word32 blockSz = ssl->specs.block_size;
 
                 if (blockSz == 0) {
@@ -23935,7 +23935,7 @@ int BuildMessage(WOLFSSL* ssl, byte* output, int outSz, const byte* input,
         #endif /* WOLFSSL_AEAD_ONLY */
 
         #ifdef HAVE_AEAD
-            if (ssl->specs.cipher_type == aead) {
+            if (ssl->specs.cipher_type == wolf__aead) {
                 if (ssl->specs.bulk_cipher_algorithm != wolfssl_chacha)
                     args->ivSz = AESGCM_EXP_IV_SZ;
 
@@ -24020,7 +24020,7 @@ int BuildMessage(WOLFSSL* ssl, byte* output, int outSz, const byte* input,
                     goto exit_buildmsg;
             }
         #ifndef WOLFSSL_AEAD_ONLY
-            if (ssl->specs.cipher_type == block) {
+            if (ssl->specs.cipher_type == wolf__block) {
                 word32 tmpIdx;
                 word32 i;
 
@@ -24075,7 +24075,7 @@ int BuildMessage(WOLFSSL* ssl, byte* output, int outSz, const byte* input,
     #endif
 
         #ifndef WOLFSSL_AEAD_ONLY
-            if (ssl->specs.cipher_type != aead
+            if (ssl->specs.cipher_type != wolf__aead
             #if defined(HAVE_ENCRYPT_THEN_MAC) && !defined(WOLFSSL_AEAD_ONLY)
                                                && !ssl->options.startedETMWrite
             #endif
@@ -24599,7 +24599,7 @@ int cipherExtraData(WOLFSSL* ssl)
      * there is the authentication tag (aead_mac_size). For block
      * ciphers we have the hash_size MAC on the message, and one
      * block size for possible padding. */
-    if (ssl->specs.cipher_type == aead) {
+    if (ssl->specs.cipher_type == wolf__aead) {
         cipherExtra = ssl->specs.aead_mac_size;
         /* CHACHA does not have an explicit IV. */
         if (ssl->specs.bulk_cipher_algorithm != wolfssl_chacha) {
@@ -25574,7 +25574,7 @@ static int ModifyForMTU(WOLFSSL* ssl, int buffSz, int outputSz, int mtuSz)
 #ifndef WOLFSSL_AEAD_ONLY
         /* Subtract a block size to be certain that returned fragment
          * size won't get more padding. */
-        if (ssl->specs.cipher_type == block)
+        if (ssl->specs.cipher_type == wolf__block)
             buffSz -= ssl->specs.block_size;
 #endif
     }
@@ -38506,7 +38506,7 @@ static int DoSessionTicket(WOLFSSL* ssl, const byte* input, word32* inOutIdx,
 
 #if defined(HAVE_TLS_EXTENSIONS) && defined(HAVE_ENCRYPT_THEN_MAC) && \
     !defined(WOLFSSL_AEAD_ONLY)
-            if (ssl->options.encThenMac && ssl->specs.cipher_type == block) {
+            if (ssl->options.encThenMac && ssl->specs.cipher_type == wolf__block) {
                 ret = TLSX_EncryptThenMac_Respond(ssl);
                 if (ret != 0)
                     goto out;
@@ -38546,7 +38546,7 @@ static int DoSessionTicket(WOLFSSL* ssl, const byte* input, word32* inOutIdx,
 #if defined(HAVE_TLS_EXTENSIONS) && defined(HAVE_ENCRYPT_THEN_MAC) && \
     !defined(WOLFSSL_AEAD_ONLY)
         if (ret == 0 && ssl->options.encThenMac &&
-                                              ssl->specs.cipher_type == block) {
+                                              ssl->specs.cipher_type == wolf__block) {
             ret = TLSX_EncryptThenMac_Respond(ssl);
         }
         else

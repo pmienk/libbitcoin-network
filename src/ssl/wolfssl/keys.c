@@ -66,7 +66,7 @@ int SetCipherSpecs(WOLFSSL* ssl)
         }
 
     #if defined(HAVE_ENCRYPT_THEN_MAC) && !defined(WOLFSSL_AEAD_ONLY)
-        if (IsAtLeastTLSv1_3(ssl->version) || ssl->specs.cipher_type != block)
+        if (IsAtLeastTLSv1_3(ssl->version) || ssl->specs.cipher_type != wolf__block)
            ssl->options.encThenMac = 0;
     #endif
 
@@ -134,7 +134,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_ECDHE_RSA_WITH_CHACHA20_OLD_POLY1305_SHA256
     case TLS_ECDHE_RSA_WITH_CHACHA20_OLD_POLY1305_SHA256:
         specs->bulk_cipher_algorithm = wolfssl_chacha;
-        specs->cipher_type           = aead;
+        specs->cipher_type           = wolf__aead;
         specs->mac_algorithm         = sha256_mac;
         specs->kea                   = ecc_diffie_hellman_kea;
         specs->sig_algo              = rsa_sa_algo;
@@ -154,7 +154,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_ECDHE_ECDSA_WITH_CHACHA20_OLD_POLY1305_SHA256
     case TLS_ECDHE_ECDSA_WITH_CHACHA20_OLD_POLY1305_SHA256:
         specs->bulk_cipher_algorithm = wolfssl_chacha;
-        specs->cipher_type           = aead;
+        specs->cipher_type           = wolf__aead;
         specs->mac_algorithm         = sha256_mac;
         specs->kea                   = ecc_diffie_hellman_kea;
         specs->sig_algo              = ecc_dsa_sa_algo;
@@ -174,7 +174,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_DHE_RSA_WITH_CHACHA20_OLD_POLY1305_SHA256
     case TLS_DHE_RSA_WITH_CHACHA20_OLD_POLY1305_SHA256:
         specs->bulk_cipher_algorithm = wolfssl_chacha;
-        specs->cipher_type           = aead;
+        specs->cipher_type           = wolf__aead;
         specs->mac_algorithm         = sha256_mac;
         specs->kea                   = diffie_hellman_kea;
         specs->sig_algo              = rsa_sa_algo;
@@ -193,7 +193,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256
     case TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256:
         specs->bulk_cipher_algorithm = wolfssl_chacha;
-        specs->cipher_type           = aead;
+        specs->cipher_type           = wolf__aead;
         specs->mac_algorithm         = sha256_mac;
         specs->kea                   = ecc_diffie_hellman_kea;
         specs->sig_algo              = rsa_sa_algo;
@@ -213,7 +213,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256
     case TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256:
         specs->bulk_cipher_algorithm = wolfssl_chacha;
-        specs->cipher_type           = aead;
+        specs->cipher_type           = wolf__aead;
         specs->mac_algorithm         = sha256_mac;
         specs->kea                   = ecc_diffie_hellman_kea;
         specs->sig_algo              = ecc_dsa_sa_algo;
@@ -233,7 +233,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_DHE_RSA_WITH_CHACHA20_POLY1305_SHA256
     case TLS_DHE_RSA_WITH_CHACHA20_POLY1305_SHA256:
         specs->bulk_cipher_algorithm = wolfssl_chacha;
-        specs->cipher_type           = aead;
+        specs->cipher_type           = wolf__aead;
         specs->mac_algorithm         = sha256_mac;
         specs->kea                   = diffie_hellman_kea;
         specs->sig_algo              = rsa_sa_algo;
@@ -253,7 +253,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_PSK_WITH_CHACHA20_POLY1305_SHA256
     case TLS_PSK_WITH_CHACHA20_POLY1305_SHA256:
         specs->bulk_cipher_algorithm = wolfssl_chacha;
-        specs->cipher_type           = aead;
+        specs->cipher_type           = wolf__aead;
         specs->mac_algorithm         = sha256_mac;
         specs->kea                   = psk_kea;
         specs->sig_algo              = anonymous_sa_algo;
@@ -275,7 +275,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_ECDHE_PSK_WITH_CHACHA20_POLY1305_SHA256
     case TLS_ECDHE_PSK_WITH_CHACHA20_POLY1305_SHA256:
         specs->bulk_cipher_algorithm = wolfssl_chacha;
-        specs->cipher_type           = aead;
+        specs->cipher_type           = wolf__aead;
         specs->mac_algorithm         = sha256_mac;
         specs->kea                   = ecdhe_psk_kea;
         specs->sig_algo              = anonymous_sa_algo;
@@ -297,7 +297,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_DHE_PSK_WITH_CHACHA20_POLY1305_SHA256
     case TLS_DHE_PSK_WITH_CHACHA20_POLY1305_SHA256:
         specs->bulk_cipher_algorithm = wolfssl_chacha;
-        specs->cipher_type           = aead;
+        specs->cipher_type           = wolf__aead;
         specs->mac_algorithm         = sha256_mac;
         specs->kea                   = dhe_psk_kea;
         specs->sig_algo              = anonymous_sa_algo;
@@ -331,7 +331,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256
     case TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256 :
         specs->bulk_cipher_algorithm = wolfssl_aes;
-        specs->cipher_type           = block;
+        specs->cipher_type           = wolf__block;
         specs->mac_algorithm         = sha256_mac;
         specs->kea                   = ecc_diffie_hellman_kea;
         specs->sig_algo              = rsa_sa_algo;
@@ -348,7 +348,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384
     case TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384 :
         specs->bulk_cipher_algorithm = wolfssl_aes;
-        specs->cipher_type           = block;
+        specs->cipher_type           = wolf__block;
         specs->mac_algorithm         = sha384_mac;
         specs->kea                   = ecc_diffie_hellman_kea;
         specs->sig_algo              = rsa_sa_algo;
@@ -365,7 +365,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA
     case TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA :
         specs->bulk_cipher_algorithm = wolfssl_aes;
-        specs->cipher_type           = block;
+        specs->cipher_type           = wolf__block;
         specs->mac_algorithm         = sha_mac;
         specs->kea                   = ecc_diffie_hellman_kea;
         specs->sig_algo              = rsa_sa_algo;
@@ -382,7 +382,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA
     case TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA :
         specs->bulk_cipher_algorithm = wolfssl_triple_des;
-        specs->cipher_type           = block;
+        specs->cipher_type           = wolf__block;
         specs->mac_algorithm         = sha_mac;
         specs->kea                   = ecc_diffie_hellman_kea;
         specs->sig_algo              = rsa_sa_algo;
@@ -405,7 +405,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_ECDHE_RSA_WITH_RC4_128_SHA
     case TLS_ECDHE_RSA_WITH_RC4_128_SHA :
         specs->bulk_cipher_algorithm = wolfssl_rc4;
-        specs->cipher_type           = stream;
+        specs->cipher_type           = wolf__stream;
         specs->mac_algorithm         = sha_mac;
         specs->kea                   = ecc_diffie_hellman_kea;
         specs->sig_algo              = rsa_sa_algo;
@@ -422,7 +422,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA
     case TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA :
         specs->bulk_cipher_algorithm = wolfssl_aes;
-        specs->cipher_type           = block;
+        specs->cipher_type           = wolf__block;
         specs->mac_algorithm         = sha_mac;
         specs->kea                   = ecc_diffie_hellman_kea;
         specs->sig_algo              = rsa_sa_algo;
@@ -439,7 +439,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
     case TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256 :
         specs->bulk_cipher_algorithm = wolfssl_aes_gcm;
-        specs->cipher_type           = aead;
+        specs->cipher_type           = wolf__aead;
         specs->mac_algorithm         = sha256_mac;
         specs->kea                   = ecc_diffie_hellman_kea;
         specs->sig_algo              = rsa_sa_algo;
@@ -457,7 +457,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
     case TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384 :
         specs->bulk_cipher_algorithm = wolfssl_aes_gcm;
-        specs->cipher_type           = aead;
+        specs->cipher_type           = wolf__aead;
         specs->mac_algorithm         = sha384_mac;
         specs->kea                   = ecc_diffie_hellman_kea;
         specs->sig_algo              = rsa_sa_algo;
@@ -475,7 +475,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_ECDHE_PSK_WITH_NULL_SHA256
     case TLS_ECDHE_PSK_WITH_NULL_SHA256 :
         specs->bulk_cipher_algorithm = wolfssl_cipher_null;
-        specs->cipher_type           = stream;
+        specs->cipher_type           = wolf__stream;
         specs->mac_algorithm         = sha256_mac;
         specs->kea                   = ecdhe_psk_kea;
         specs->sig_algo              = anonymous_sa_algo;
@@ -494,7 +494,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_ECDHE_PSK_WITH_AES_128_CBC_SHA256
     case TLS_ECDHE_PSK_WITH_AES_128_CBC_SHA256 :
         specs->bulk_cipher_algorithm = wolfssl_aes;
-        specs->cipher_type           = block;
+        specs->cipher_type           = wolf__block;
         specs->mac_algorithm         = sha256_mac;
         specs->kea                   = ecdhe_psk_kea;
         specs->sig_algo              = anonymous_sa_algo;
@@ -520,7 +520,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256
     case TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256 :
         specs->bulk_cipher_algorithm = wolfssl_aes;
-        specs->cipher_type           = block;
+        specs->cipher_type           = wolf__block;
         specs->mac_algorithm         = sha256_mac;
         specs->kea                   = ecc_diffie_hellman_kea;
         specs->sig_algo              = ecc_dsa_sa_algo;
@@ -537,7 +537,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384
     case TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384 :
         specs->bulk_cipher_algorithm = wolfssl_aes;
-        specs->cipher_type           = block;
+        specs->cipher_type           = wolf__block;
         specs->mac_algorithm         = sha384_mac;
         specs->kea                   = ecc_diffie_hellman_kea;
         specs->sig_algo              = ecc_dsa_sa_algo;
@@ -554,7 +554,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_ECDHE_ECDSA_WITH_3DES_EDE_CBC_SHA
     case TLS_ECDHE_ECDSA_WITH_3DES_EDE_CBC_SHA :
         specs->bulk_cipher_algorithm = wolfssl_triple_des;
-        specs->cipher_type           = block;
+        specs->cipher_type           = wolf__block;
         specs->mac_algorithm         = sha_mac;
         specs->kea                   = ecc_diffie_hellman_kea;
         specs->sig_algo              = ecc_dsa_sa_algo;
@@ -575,7 +575,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_ECDHE_ECDSA_WITH_RC4_128_SHA
     case TLS_ECDHE_ECDSA_WITH_RC4_128_SHA :
         specs->bulk_cipher_algorithm = wolfssl_rc4;
-        specs->cipher_type           = stream;
+        specs->cipher_type           = wolf__stream;
         specs->mac_algorithm         = sha_mac;
         specs->kea                   = ecc_diffie_hellman_kea;
         specs->sig_algo              = ecc_dsa_sa_algo;
@@ -592,7 +592,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA
     case TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA :
         specs->bulk_cipher_algorithm = wolfssl_aes;
-        specs->cipher_type           = block;
+        specs->cipher_type           = wolf__block;
         specs->mac_algorithm         = sha_mac;
         specs->kea                   = ecc_diffie_hellman_kea;
         specs->sig_algo              = ecc_dsa_sa_algo;
@@ -609,7 +609,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA
     case TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA :
         specs->bulk_cipher_algorithm = wolfssl_aes;
-        specs->cipher_type           = block;
+        specs->cipher_type           = wolf__block;
         specs->mac_algorithm         = sha_mac;
         specs->kea                   = ecc_diffie_hellman_kea;
         specs->sig_algo              = ecc_dsa_sa_algo;
@@ -626,7 +626,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256
     case TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256 :
         specs->bulk_cipher_algorithm = wolfssl_aes_gcm;
-        specs->cipher_type           = aead;
+        specs->cipher_type           = wolf__aead;
         specs->mac_algorithm         = sha256_mac;
         specs->kea                   = ecc_diffie_hellman_kea;
         specs->sig_algo              = ecc_dsa_sa_algo;
@@ -644,7 +644,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384
     case TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384 :
         specs->bulk_cipher_algorithm = wolfssl_aes_gcm;
-        specs->cipher_type           = aead;
+        specs->cipher_type           = wolf__aead;
         specs->mac_algorithm         = sha384_mac;
         specs->kea                   = ecc_diffie_hellman_kea;
         specs->sig_algo              = ecc_dsa_sa_algo;
@@ -662,7 +662,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_ECDHE_ECDSA_WITH_AES_128_CCM
     case TLS_ECDHE_ECDSA_WITH_AES_128_CCM :
         specs->bulk_cipher_algorithm = wolfssl_aes_ccm;
-        specs->cipher_type           = aead;
+        specs->cipher_type           = wolf__aead;
         specs->mac_algorithm         = sha256_mac;
         specs->kea                   = ecc_diffie_hellman_kea;
         specs->sig_algo              = ecc_dsa_sa_algo;
@@ -680,7 +680,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8
     case TLS_ECDHE_ECDSA_WITH_AES_128_CCM_8 :
         specs->bulk_cipher_algorithm = wolfssl_aes_ccm;
-        specs->cipher_type           = aead;
+        specs->cipher_type           = wolf__aead;
         specs->mac_algorithm         = sha256_mac;
         specs->kea                   = ecc_diffie_hellman_kea;
         specs->sig_algo              = ecc_dsa_sa_algo;
@@ -698,7 +698,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_ECDHE_ECDSA_WITH_AES_256_CCM_8
     case TLS_ECDHE_ECDSA_WITH_AES_256_CCM_8 :
         specs->bulk_cipher_algorithm = wolfssl_aes_ccm;
-        specs->cipher_type           = aead;
+        specs->cipher_type           = wolf__aead;
         specs->mac_algorithm         = sha256_mac;
         specs->kea                   = ecc_diffie_hellman_kea;
         specs->sig_algo              = ecc_dsa_sa_algo;
@@ -716,7 +716,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_ECDHE_ECDSA_WITH_NULL_SHA
     case TLS_ECDHE_ECDSA_WITH_NULL_SHA :
         specs->bulk_cipher_algorithm = wolfssl_cipher_null;
-        specs->cipher_type           = stream;
+        specs->cipher_type           = wolf__stream;
         specs->mac_algorithm         = sha_mac;
         specs->kea                   = ecc_diffie_hellman_kea;
         specs->sig_algo              = ecc_dsa_sa_algo;
@@ -737,7 +737,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_ECDH_RSA_WITH_AES_128_CBC_SHA256
     case TLS_ECDH_RSA_WITH_AES_128_CBC_SHA256 :
         specs->bulk_cipher_algorithm = wolfssl_aes;
-        specs->cipher_type           = block;
+        specs->cipher_type           = wolf__block;
         specs->mac_algorithm         = sha256_mac;
         specs->kea                   = ecc_diffie_hellman_kea;
         specs->sig_algo              = rsa_sa_algo;
@@ -754,7 +754,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA256
     case TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA256 :
         specs->bulk_cipher_algorithm = wolfssl_aes;
-        specs->cipher_type           = block;
+        specs->cipher_type           = wolf__block;
         specs->mac_algorithm         = sha256_mac;
         specs->kea                   = ecc_diffie_hellman_kea;
         specs->sig_algo              = ecc_dsa_sa_algo;
@@ -771,7 +771,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_ECDH_RSA_WITH_AES_256_CBC_SHA384
     case TLS_ECDH_RSA_WITH_AES_256_CBC_SHA384 :
         specs->bulk_cipher_algorithm = wolfssl_aes;
-        specs->cipher_type           = block;
+        specs->cipher_type           = wolf__block;
         specs->mac_algorithm         = sha384_mac;
         specs->kea                   = ecc_diffie_hellman_kea;
         specs->sig_algo              = rsa_sa_algo;
@@ -788,7 +788,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA384
     case TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA384 :
         specs->bulk_cipher_algorithm = wolfssl_aes;
-        specs->cipher_type           = block;
+        specs->cipher_type           = wolf__block;
         specs->mac_algorithm         = sha384_mac;
         specs->kea                   = ecc_diffie_hellman_kea;
         specs->sig_algo              = ecc_dsa_sa_algo;
@@ -805,7 +805,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_ECDH_RSA_WITH_AES_128_CBC_SHA
     case TLS_ECDH_RSA_WITH_AES_128_CBC_SHA :
         specs->bulk_cipher_algorithm = wolfssl_aes;
-        specs->cipher_type           = block;
+        specs->cipher_type           = wolf__block;
         specs->mac_algorithm         = sha_mac;
         specs->kea                   = ecc_diffie_hellman_kea;
         specs->sig_algo              = rsa_sa_algo;
@@ -822,7 +822,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_ECDH_RSA_WITH_3DES_EDE_CBC_SHA
     case TLS_ECDH_RSA_WITH_3DES_EDE_CBC_SHA :
         specs->bulk_cipher_algorithm = wolfssl_triple_des;
-        specs->cipher_type           = block;
+        specs->cipher_type           = wolf__block;
         specs->mac_algorithm         = sha_mac;
         specs->kea                   = ecc_diffie_hellman_kea;
         specs->sig_algo              = rsa_sa_algo;
@@ -843,7 +843,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_ECDH_RSA_WITH_RC4_128_SHA
     case TLS_ECDH_RSA_WITH_RC4_128_SHA :
         specs->bulk_cipher_algorithm = wolfssl_rc4;
-        specs->cipher_type           = stream;
+        specs->cipher_type           = wolf__stream;
         specs->mac_algorithm         = sha_mac;
         specs->kea                   = ecc_diffie_hellman_kea;
         specs->sig_algo              = rsa_sa_algo;
@@ -860,7 +860,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_ECDH_ECDSA_WITH_3DES_EDE_CBC_SHA
     case TLS_ECDH_ECDSA_WITH_3DES_EDE_CBC_SHA :
         specs->bulk_cipher_algorithm = wolfssl_triple_des;
-        specs->cipher_type           = block;
+        specs->cipher_type           = wolf__block;
         specs->mac_algorithm         = sha_mac;
         specs->kea                   = ecc_diffie_hellman_kea;
         specs->sig_algo              = ecc_dsa_sa_algo;
@@ -881,7 +881,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_ECDH_ECDSA_WITH_RC4_128_SHA
     case TLS_ECDH_ECDSA_WITH_RC4_128_SHA :
         specs->bulk_cipher_algorithm = wolfssl_rc4;
-        specs->cipher_type           = stream;
+        specs->cipher_type           = wolf__stream;
         specs->mac_algorithm         = sha_mac;
         specs->kea                   = ecc_diffie_hellman_kea;
         specs->sig_algo              = ecc_dsa_sa_algo;
@@ -898,7 +898,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_ECDH_RSA_WITH_AES_256_CBC_SHA
     case TLS_ECDH_RSA_WITH_AES_256_CBC_SHA :
         specs->bulk_cipher_algorithm = wolfssl_aes;
-        specs->cipher_type           = block;
+        specs->cipher_type           = wolf__block;
         specs->mac_algorithm         = sha_mac;
         specs->kea                   = ecc_diffie_hellman_kea;
         specs->sig_algo              = rsa_sa_algo;
@@ -915,7 +915,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA
     case TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA :
         specs->bulk_cipher_algorithm = wolfssl_aes;
-        specs->cipher_type           = block;
+        specs->cipher_type           = wolf__block;
         specs->mac_algorithm         = sha_mac;
         specs->kea                   = ecc_diffie_hellman_kea;
         specs->sig_algo              = ecc_dsa_sa_algo;
@@ -932,7 +932,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA
     case TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA :
         specs->bulk_cipher_algorithm = wolfssl_aes;
-        specs->cipher_type           = block;
+        specs->cipher_type           = wolf__block;
         specs->mac_algorithm         = sha_mac;
         specs->kea                   = ecc_diffie_hellman_kea;
         specs->sig_algo              = ecc_dsa_sa_algo;
@@ -949,7 +949,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_ECDH_RSA_WITH_AES_128_GCM_SHA256
     case TLS_ECDH_RSA_WITH_AES_128_GCM_SHA256 :
         specs->bulk_cipher_algorithm = wolfssl_aes_gcm;
-        specs->cipher_type           = aead;
+        specs->cipher_type           = wolf__aead;
         specs->mac_algorithm         = sha256_mac;
         specs->kea                   = ecc_diffie_hellman_kea;
         specs->sig_algo              = rsa_sa_algo;
@@ -967,7 +967,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_ECDH_RSA_WITH_AES_256_GCM_SHA384
     case TLS_ECDH_RSA_WITH_AES_256_GCM_SHA384 :
         specs->bulk_cipher_algorithm = wolfssl_aes_gcm;
-        specs->cipher_type           = aead;
+        specs->cipher_type           = wolf__aead;
         specs->mac_algorithm         = sha384_mac;
         specs->kea                   = ecc_diffie_hellman_kea;
         specs->sig_algo              = rsa_sa_algo;
@@ -985,7 +985,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_ECDH_ECDSA_WITH_AES_128_GCM_SHA256
     case TLS_ECDH_ECDSA_WITH_AES_128_GCM_SHA256 :
         specs->bulk_cipher_algorithm = wolfssl_aes_gcm;
-        specs->cipher_type           = aead;
+        specs->cipher_type           = wolf__aead;
         specs->mac_algorithm         = sha256_mac;
         specs->kea                   = ecc_diffie_hellman_kea;
         specs->sig_algo              = ecc_dsa_sa_algo;
@@ -1003,7 +1003,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_ECDH_ECDSA_WITH_AES_256_GCM_SHA384
     case TLS_ECDH_ECDSA_WITH_AES_256_GCM_SHA384 :
         specs->bulk_cipher_algorithm = wolfssl_aes_gcm;
-        specs->cipher_type           = aead;
+        specs->cipher_type           = wolf__aead;
         specs->mac_algorithm         = sha384_mac;
         specs->kea                   = ecc_diffie_hellman_kea;
         specs->sig_algo              = ecc_dsa_sa_algo;
@@ -1021,7 +1021,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_ECDHE_ECDSA_WITH_ARIA_128_GCM_SHA256
     case TLS_ECDHE_ECDSA_WITH_ARIA_128_GCM_SHA256 :
         specs->bulk_cipher_algorithm = wolfssl_aria_gcm;
-        specs->cipher_type           = aead;
+        specs->cipher_type           = wolf__aead;
         specs->mac_algorithm         = sha256_mac;
         specs->kea                   = ecc_diffie_hellman_kea;
         specs->sig_algo              = ecc_dsa_sa_algo;
@@ -1039,7 +1039,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_ECDHE_ECDSA_WITH_ARIA_256_GCM_SHA384
     case TLS_ECDHE_ECDSA_WITH_ARIA_256_GCM_SHA384 :
         specs->bulk_cipher_algorithm = wolfssl_aria_gcm;
-        specs->cipher_type           = aead;
+        specs->cipher_type           = wolf__aead;
         specs->mac_algorithm         = sha384_mac;
         specs->kea                   = ecc_diffie_hellman_kea;
         specs->sig_algo              = ecc_dsa_sa_algo;
@@ -1059,7 +1059,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_RSA_WITH_AES_128_CCM_8
     case TLS_RSA_WITH_AES_128_CCM_8 :
         specs->bulk_cipher_algorithm = wolfssl_aes_ccm;
-        specs->cipher_type           = aead;
+        specs->cipher_type           = wolf__aead;
         specs->mac_algorithm         = sha256_mac;
         specs->kea                   = rsa_kea;
         specs->sig_algo              = rsa_sa_algo;
@@ -1077,7 +1077,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_RSA_WITH_AES_256_CCM_8
     case TLS_RSA_WITH_AES_256_CCM_8 :
         specs->bulk_cipher_algorithm = wolfssl_aes_ccm;
-        specs->cipher_type           = aead;
+        specs->cipher_type           = wolf__aead;
         specs->mac_algorithm         = sha256_mac;
         specs->kea                   = rsa_kea;
         specs->sig_algo              = rsa_sa_algo;
@@ -1095,7 +1095,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_PSK_WITH_AES_128_CCM_8
     case TLS_PSK_WITH_AES_128_CCM_8 :
         specs->bulk_cipher_algorithm = wolfssl_aes_ccm;
-        specs->cipher_type           = aead;
+        specs->cipher_type           = wolf__aead;
         specs->mac_algorithm         = sha256_mac;
         specs->kea                   = psk_kea;
         specs->sig_algo              = anonymous_sa_algo;
@@ -1115,7 +1115,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_PSK_WITH_AES_256_CCM_8
     case TLS_PSK_WITH_AES_256_CCM_8 :
         specs->bulk_cipher_algorithm = wolfssl_aes_ccm;
-        specs->cipher_type           = aead;
+        specs->cipher_type           = wolf__aead;
         specs->mac_algorithm         = sha256_mac;
         specs->kea                   = psk_kea;
         specs->sig_algo              = anonymous_sa_algo;
@@ -1135,7 +1135,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_PSK_WITH_AES_128_CCM
     case TLS_PSK_WITH_AES_128_CCM :
         specs->bulk_cipher_algorithm = wolfssl_aes_ccm;
-        specs->cipher_type           = aead;
+        specs->cipher_type           = wolf__aead;
         specs->mac_algorithm         = sha256_mac;
         specs->kea                   = psk_kea;
         specs->sig_algo              = anonymous_sa_algo;
@@ -1155,7 +1155,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_PSK_WITH_AES_256_CCM
     case TLS_PSK_WITH_AES_256_CCM :
         specs->bulk_cipher_algorithm = wolfssl_aes_ccm;
-        specs->cipher_type           = aead;
+        specs->cipher_type           = wolf__aead;
         specs->mac_algorithm         = sha256_mac;
         specs->kea                   = psk_kea;
         specs->sig_algo              = anonymous_sa_algo;
@@ -1175,7 +1175,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_DHE_PSK_WITH_AES_128_CCM
     case TLS_DHE_PSK_WITH_AES_128_CCM :
         specs->bulk_cipher_algorithm = wolfssl_aes_ccm;
-        specs->cipher_type           = aead;
+        specs->cipher_type           = wolf__aead;
         specs->mac_algorithm         = sha256_mac;
         specs->kea                   = dhe_psk_kea;
         specs->sig_algo              = anonymous_sa_algo;
@@ -1195,7 +1195,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_DHE_PSK_WITH_AES_256_CCM
     case TLS_DHE_PSK_WITH_AES_256_CCM :
         specs->bulk_cipher_algorithm = wolfssl_aes_ccm;
-        specs->cipher_type           = aead;
+        specs->cipher_type           = wolf__aead;
         specs->mac_algorithm         = sha256_mac;
         specs->kea                   = dhe_psk_kea;
         specs->sig_algo              = anonymous_sa_algo;
@@ -1216,7 +1216,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
     #ifdef BUILD_TLS_SHA256_SHA256
     case TLS_SHA256_SHA256 :
         specs->bulk_cipher_algorithm = wolfssl_cipher_null;
-        specs->cipher_type           = aead;
+        specs->cipher_type           = wolf__aead;
         specs->mac_algorithm         = sha256_mac;
         specs->kea                   = any_kea;
         specs->sig_algo              = any_sa_algo;
@@ -1234,7 +1234,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
     #ifdef BUILD_TLS_SHA384_SHA384
     case TLS_SHA384_SHA384 :
         specs->bulk_cipher_algorithm = wolfssl_cipher_null;
-        specs->cipher_type           = aead;
+        specs->cipher_type           = wolf__aead;
         specs->mac_algorithm         = sha384_mac;
         specs->kea                   = any_kea;
         specs->sig_algo              = any_sa_algo;
@@ -1264,7 +1264,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
     #ifdef BUILD_TLS_AES_128_GCM_SHA256
         case TLS_AES_128_GCM_SHA256 :
             specs->bulk_cipher_algorithm = wolfssl_aes_gcm;
-            specs->cipher_type           = aead;
+            specs->cipher_type           = wolf__aead;
             specs->mac_algorithm         = sha256_mac;
             specs->kea                   = any_kea;
             specs->sig_algo              = any_sa_algo;
@@ -1282,7 +1282,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
     #ifdef BUILD_TLS_AES_256_GCM_SHA384
         case TLS_AES_256_GCM_SHA384 :
             specs->bulk_cipher_algorithm = wolfssl_aes_gcm;
-            specs->cipher_type           = aead;
+            specs->cipher_type           = wolf__aead;
             specs->mac_algorithm         = sha384_mac;
             specs->kea                   = any_kea;
             specs->sig_algo              = any_sa_algo;
@@ -1300,7 +1300,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
     #ifdef BUILD_TLS_CHACHA20_POLY1305_SHA256
         case TLS_CHACHA20_POLY1305_SHA256 :
             specs->bulk_cipher_algorithm = wolfssl_chacha;
-            specs->cipher_type           = aead;
+            specs->cipher_type           = wolf__aead;
             specs->mac_algorithm         = sha256_mac;
             specs->kea                   = any_kea;
             specs->sig_algo              = any_sa_algo;
@@ -1320,7 +1320,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
     #ifdef BUILD_TLS_AES_128_CCM_SHA256
         case TLS_AES_128_CCM_SHA256 :
             specs->bulk_cipher_algorithm = wolfssl_aes_ccm;
-            specs->cipher_type           = aead;
+            specs->cipher_type           = wolf__aead;
             specs->mac_algorithm         = sha256_mac;
             specs->kea                   = any_kea;
             specs->sig_algo              = any_sa_algo;
@@ -1338,7 +1338,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
     #ifdef BUILD_TLS_AES_128_CCM_8_SHA256
         case TLS_AES_128_CCM_8_SHA256 :
             specs->bulk_cipher_algorithm = wolfssl_aes_ccm;
-            specs->cipher_type           = aead;
+            specs->cipher_type           = wolf__aead;
             specs->mac_algorithm         = sha256_mac;
             specs->kea                   = any_kea;
             specs->sig_algo              = any_sa_algo;
@@ -1366,7 +1366,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_ECDHE_PSK_WITH_AES_128_GCM_SHA256
     case TLS_ECDHE_PSK_WITH_AES_128_GCM_SHA256 :
         specs->bulk_cipher_algorithm = wolfssl_aes_gcm;
-        specs->cipher_type           = aead;
+        specs->cipher_type           = wolf__aead;
         specs->mac_algorithm         = sha256_mac;
         specs->kea                   = ecdhe_psk_kea;
         specs->sig_algo              = anonymous_sa_algo;
@@ -1395,7 +1395,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_ECDHE_ECDSA_WITH_SM4_CBC_SM3
     case TLS_ECDHE_ECDSA_WITH_SM4_CBC_SM3 :
         specs->bulk_cipher_algorithm = wolfssl_sm4_cbc;
-        specs->cipher_type           = block;
+        specs->cipher_type           = wolf__block;
         specs->mac_algorithm         = sm3_mac;
         specs->kea                   = ecc_diffie_hellman_kea;
         specs->sig_algo              = sm2_sa_algo;
@@ -1412,7 +1412,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_ECDHE_ECDSA_WITH_SM4_GCM_SM3
     case TLS_ECDHE_ECDSA_WITH_SM4_GCM_SM3 :
         specs->bulk_cipher_algorithm = wolfssl_sm4_gcm;
-        specs->cipher_type           = aead;
+        specs->cipher_type           = wolf__aead;
         specs->mac_algorithm         = sm3_mac;
         specs->kea                   = ecc_diffie_hellman_kea;
         specs->sig_algo              = sm2_sa_algo;
@@ -1430,7 +1430,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_ECDHE_ECDSA_WITH_SM4_CCM_SM3
     case TLS_ECDHE_ECDSA_WITH_SM4_CCM_SM3 :
         specs->bulk_cipher_algorithm = wolfssl_sm4_ccm;
-        specs->cipher_type           = aead;
+        specs->cipher_type           = wolf__aead;
         specs->mac_algorithm         = sm3_mac;
         specs->kea                   = ecc_diffie_hellman_kea;
         specs->sig_algo              = sm2_sa_algo;
@@ -1464,7 +1464,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_SM4_GCM_SM3
     case TLS_SM4_GCM_SM3 :
         specs->bulk_cipher_algorithm = wolfssl_sm4_gcm;
-        specs->cipher_type           = aead;
+        specs->cipher_type           = wolf__aead;
         specs->mac_algorithm         = sm3_mac;
         specs->kea                   = any_kea;
         specs->sig_algo              = any_sa_algo;
@@ -1482,7 +1482,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_SM4_CCM_SM3
     case TLS_SM4_CCM_SM3 :
         specs->bulk_cipher_algorithm = wolfssl_sm4_ccm;
-        specs->cipher_type           = aead;
+        specs->cipher_type           = wolf__aead;
         specs->mac_algorithm         = sm3_mac;
         specs->kea                   = any_kea;
         specs->sig_algo              = any_sa_algo;
@@ -1500,7 +1500,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_SSL_RSA_WITH_RC4_128_SHA
     case SSL_RSA_WITH_RC4_128_SHA :
         specs->bulk_cipher_algorithm = wolfssl_rc4;
-        specs->cipher_type           = stream;
+        specs->cipher_type           = wolf__stream;
         specs->mac_algorithm         = sha_mac;
         specs->kea                   = rsa_kea;
         specs->sig_algo              = rsa_sa_algo;
@@ -1517,7 +1517,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_SSL_RSA_WITH_RC4_128_MD5
     case SSL_RSA_WITH_RC4_128_MD5 :
         specs->bulk_cipher_algorithm = wolfssl_rc4;
-        specs->cipher_type           = stream;
+        specs->cipher_type           = wolf__stream;
         specs->mac_algorithm         = md5_mac;
         specs->kea                   = rsa_kea;
         specs->sig_algo              = rsa_sa_algo;
@@ -1534,7 +1534,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_SSL_RSA_WITH_3DES_EDE_CBC_SHA
     case SSL_RSA_WITH_3DES_EDE_CBC_SHA :
         specs->bulk_cipher_algorithm = wolfssl_triple_des;
-        specs->cipher_type           = block;
+        specs->cipher_type           = wolf__block;
         specs->mac_algorithm         = sha_mac;
         specs->kea                   = rsa_kea;
         specs->sig_algo              = rsa_sa_algo;
@@ -1555,7 +1555,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_RSA_WITH_AES_128_CBC_SHA
     case TLS_RSA_WITH_AES_128_CBC_SHA :
         specs->bulk_cipher_algorithm = wolfssl_aes;
-        specs->cipher_type           = block;
+        specs->cipher_type           = wolf__block;
         specs->mac_algorithm         = sha_mac;
         specs->kea                   = rsa_kea;
         specs->sig_algo              = rsa_sa_algo;
@@ -1572,7 +1572,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_RSA_WITH_AES_128_CBC_SHA256
     case TLS_RSA_WITH_AES_128_CBC_SHA256 :
         specs->bulk_cipher_algorithm = wolfssl_aes;
-        specs->cipher_type           = block;
+        specs->cipher_type           = wolf__block;
         specs->mac_algorithm         = sha256_mac;
         specs->kea                   = rsa_kea;
         specs->sig_algo              = rsa_sa_algo;
@@ -1589,7 +1589,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_RSA_WITH_NULL_MD5
     case TLS_RSA_WITH_NULL_MD5 :
         specs->bulk_cipher_algorithm = wolfssl_cipher_null;
-        specs->cipher_type           = stream;
+        specs->cipher_type           = wolf__stream;
         specs->mac_algorithm         = md5_mac;
         specs->kea                   = rsa_kea;
         specs->sig_algo              = rsa_sa_algo;
@@ -1606,7 +1606,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_RSA_WITH_NULL_SHA
     case TLS_RSA_WITH_NULL_SHA :
         specs->bulk_cipher_algorithm = wolfssl_cipher_null;
-        specs->cipher_type           = stream;
+        specs->cipher_type           = wolf__stream;
         specs->mac_algorithm         = sha_mac;
         specs->kea                   = rsa_kea;
         specs->sig_algo              = rsa_sa_algo;
@@ -1623,7 +1623,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_RSA_WITH_NULL_SHA256
     case TLS_RSA_WITH_NULL_SHA256 :
         specs->bulk_cipher_algorithm = wolfssl_cipher_null;
-        specs->cipher_type           = stream;
+        specs->cipher_type           = wolf__stream;
         specs->mac_algorithm         = sha256_mac;
         specs->kea                   = rsa_kea;
         specs->sig_algo              = rsa_sa_algo;
@@ -1640,7 +1640,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_RSA_WITH_AES_256_CBC_SHA
     case TLS_RSA_WITH_AES_256_CBC_SHA :
         specs->bulk_cipher_algorithm = wolfssl_aes;
-        specs->cipher_type           = block;
+        specs->cipher_type           = wolf__block;
         specs->mac_algorithm         = sha_mac;
         specs->kea                   = rsa_kea;
         specs->sig_algo              = rsa_sa_algo;
@@ -1657,7 +1657,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_RSA_WITH_AES_256_CBC_SHA256
     case TLS_RSA_WITH_AES_256_CBC_SHA256 :
         specs->bulk_cipher_algorithm = wolfssl_aes;
-        specs->cipher_type           = block;
+        specs->cipher_type           = wolf__block;
         specs->mac_algorithm         = sha256_mac;
         specs->kea                   = rsa_kea;
         specs->sig_algo              = rsa_sa_algo;
@@ -1674,7 +1674,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_PSK_WITH_AES_128_GCM_SHA256
     case TLS_PSK_WITH_AES_128_GCM_SHA256 :
         specs->bulk_cipher_algorithm = wolfssl_aes_gcm;
-        specs->cipher_type           = aead;
+        specs->cipher_type           = wolf__aead;
         specs->mac_algorithm         = sha256_mac;
         specs->kea                   = psk_kea;
         specs->sig_algo              = anonymous_sa_algo;
@@ -1694,7 +1694,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_PSK_WITH_AES_256_GCM_SHA384
     case TLS_PSK_WITH_AES_256_GCM_SHA384 :
         specs->bulk_cipher_algorithm = wolfssl_aes_gcm;
-        specs->cipher_type           = aead;
+        specs->cipher_type           = wolf__aead;
         specs->mac_algorithm         = sha384_mac;
         specs->kea                   = psk_kea;
         specs->sig_algo              = anonymous_sa_algo;
@@ -1714,7 +1714,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_DH_anon_WITH_AES_256_GCM_SHA384
     case TLS_DH_anon_WITH_AES_256_GCM_SHA384:
         specs->bulk_cipher_algorithm = wolfssl_aes_gcm;
-        specs->cipher_type           = aead;
+        specs->cipher_type           = wolf__aead;
         specs->mac_algorithm         = sha384_mac;
         specs->kea                   = diffie_hellman_kea;
         specs->sig_algo              = anonymous_sa_algo;
@@ -1734,7 +1734,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_DHE_PSK_WITH_AES_128_GCM_SHA256
     case TLS_DHE_PSK_WITH_AES_128_GCM_SHA256 :
         specs->bulk_cipher_algorithm = wolfssl_aes_gcm;
-        specs->cipher_type           = aead;
+        specs->cipher_type           = wolf__aead;
         specs->mac_algorithm         = sha256_mac;
         specs->kea                   = dhe_psk_kea;
         specs->sig_algo              = anonymous_sa_algo;
@@ -1754,7 +1754,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_DHE_PSK_WITH_AES_256_GCM_SHA384
     case TLS_DHE_PSK_WITH_AES_256_GCM_SHA384 :
         specs->bulk_cipher_algorithm = wolfssl_aes_gcm;
-        specs->cipher_type           = aead;
+        specs->cipher_type           = wolf__aead;
         specs->mac_algorithm         = sha384_mac;
         specs->kea                   = dhe_psk_kea;
         specs->sig_algo              = anonymous_sa_algo;
@@ -1774,7 +1774,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_PSK_WITH_AES_128_CBC_SHA256
     case TLS_PSK_WITH_AES_128_CBC_SHA256 :
         specs->bulk_cipher_algorithm = wolfssl_aes;
-        specs->cipher_type           = block;
+        specs->cipher_type           = wolf__block;
         specs->mac_algorithm         = sha256_mac;
         specs->kea                   = psk_kea;
         specs->sig_algo              = anonymous_sa_algo;
@@ -1793,7 +1793,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_PSK_WITH_AES_256_CBC_SHA384
     case TLS_PSK_WITH_AES_256_CBC_SHA384 :
         specs->bulk_cipher_algorithm = wolfssl_aes;
-        specs->cipher_type           = block;
+        specs->cipher_type           = wolf__block;
         specs->mac_algorithm         = sha384_mac;
         specs->kea                   = psk_kea;
         specs->sig_algo              = anonymous_sa_algo;
@@ -1812,7 +1812,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_DHE_PSK_WITH_AES_128_CBC_SHA256
     case TLS_DHE_PSK_WITH_AES_128_CBC_SHA256 :
         specs->bulk_cipher_algorithm = wolfssl_aes;
-        specs->cipher_type           = block;
+        specs->cipher_type           = wolf__block;
         specs->mac_algorithm         = sha256_mac;
         specs->kea                   = dhe_psk_kea;
         specs->sig_algo              = anonymous_sa_algo;
@@ -1831,7 +1831,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_DHE_PSK_WITH_AES_256_CBC_SHA384
     case TLS_DHE_PSK_WITH_AES_256_CBC_SHA384 :
         specs->bulk_cipher_algorithm = wolfssl_aes;
-        specs->cipher_type           = block;
+        specs->cipher_type           = wolf__block;
         specs->mac_algorithm         = sha384_mac;
         specs->kea                   = dhe_psk_kea;
         specs->sig_algo              = anonymous_sa_algo;
@@ -1850,7 +1850,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_PSK_WITH_AES_128_CBC_SHA
     case TLS_PSK_WITH_AES_128_CBC_SHA :
         specs->bulk_cipher_algorithm = wolfssl_aes;
-        specs->cipher_type           = block;
+        specs->cipher_type           = wolf__block;
         specs->mac_algorithm         = sha_mac;
         specs->kea                   = psk_kea;
         specs->sig_algo              = anonymous_sa_algo;
@@ -1869,7 +1869,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_PSK_WITH_AES_256_CBC_SHA
     case TLS_PSK_WITH_AES_256_CBC_SHA :
         specs->bulk_cipher_algorithm = wolfssl_aes;
-        specs->cipher_type           = block;
+        specs->cipher_type           = wolf__block;
         specs->mac_algorithm         = sha_mac;
         specs->kea                   = psk_kea;
         specs->sig_algo              = anonymous_sa_algo;
@@ -1888,7 +1888,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_PSK_WITH_NULL_SHA256
     case TLS_PSK_WITH_NULL_SHA256 :
         specs->bulk_cipher_algorithm = wolfssl_cipher_null;
-        specs->cipher_type           = stream;
+        specs->cipher_type           = wolf__stream;
         specs->mac_algorithm         = sha256_mac;
         specs->kea                   = psk_kea;
         specs->sig_algo              = anonymous_sa_algo;
@@ -1907,7 +1907,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_PSK_WITH_NULL_SHA384
     case TLS_PSK_WITH_NULL_SHA384 :
         specs->bulk_cipher_algorithm = wolfssl_cipher_null;
-        specs->cipher_type           = stream;
+        specs->cipher_type           = wolf__stream;
         specs->mac_algorithm         = sha384_mac;
         specs->kea                   = psk_kea;
         specs->sig_algo              = anonymous_sa_algo;
@@ -1926,7 +1926,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_PSK_WITH_NULL_SHA
     case TLS_PSK_WITH_NULL_SHA :
         specs->bulk_cipher_algorithm = wolfssl_cipher_null;
-        specs->cipher_type           = stream;
+        specs->cipher_type           = wolf__stream;
         specs->mac_algorithm         = sha_mac;
         specs->kea                   = psk_kea;
         specs->sig_algo              = anonymous_sa_algo;
@@ -1945,7 +1945,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_DHE_PSK_WITH_NULL_SHA256
     case TLS_DHE_PSK_WITH_NULL_SHA256 :
         specs->bulk_cipher_algorithm = wolfssl_cipher_null;
-        specs->cipher_type           = stream;
+        specs->cipher_type           = wolf__stream;
         specs->mac_algorithm         = sha256_mac;
         specs->kea                   = dhe_psk_kea;
         specs->sig_algo              = anonymous_sa_algo;
@@ -1964,7 +1964,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_DHE_PSK_WITH_NULL_SHA384
     case TLS_DHE_PSK_WITH_NULL_SHA384 :
         specs->bulk_cipher_algorithm = wolfssl_cipher_null;
-        specs->cipher_type           = stream;
+        specs->cipher_type           = wolf__stream;
         specs->mac_algorithm         = sha384_mac;
         specs->kea                   = dhe_psk_kea;
         specs->sig_algo              = anonymous_sa_algo;
@@ -1983,7 +1983,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_DHE_RSA_WITH_AES_128_CBC_SHA256
     case TLS_DHE_RSA_WITH_AES_128_CBC_SHA256 :
         specs->bulk_cipher_algorithm = wolfssl_aes;
-        specs->cipher_type           = block;
+        specs->cipher_type           = wolf__block;
         specs->mac_algorithm         = sha256_mac;
         specs->kea                   = diffie_hellman_kea;
         specs->sig_algo              = rsa_sa_algo;
@@ -2000,7 +2000,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_DHE_RSA_WITH_3DES_EDE_CBC_SHA
     case TLS_DHE_RSA_WITH_3DES_EDE_CBC_SHA :
         specs->bulk_cipher_algorithm = wolfssl_triple_des;
-        specs->cipher_type           = block;
+        specs->cipher_type           = wolf__block;
         specs->mac_algorithm         = sha_mac;
         specs->kea                   = diffie_hellman_kea;
         specs->sig_algo              = rsa_sa_algo;
@@ -2017,7 +2017,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_DHE_RSA_WITH_AES_256_CBC_SHA256
     case TLS_DHE_RSA_WITH_AES_256_CBC_SHA256 :
         specs->bulk_cipher_algorithm = wolfssl_aes;
-        specs->cipher_type           = block;
+        specs->cipher_type           = wolf__block;
         specs->mac_algorithm         = sha256_mac;
         specs->kea                   = diffie_hellman_kea;
         specs->sig_algo              = rsa_sa_algo;
@@ -2034,7 +2034,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_DHE_RSA_WITH_AES_128_CBC_SHA
     case TLS_DHE_RSA_WITH_AES_128_CBC_SHA :
         specs->bulk_cipher_algorithm = wolfssl_aes;
-        specs->cipher_type           = block;
+        specs->cipher_type           = wolf__block;
         specs->mac_algorithm         = sha_mac;
         specs->kea                   = diffie_hellman_kea;
         specs->sig_algo              = rsa_sa_algo;
@@ -2051,7 +2051,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_DHE_RSA_WITH_AES_256_CBC_SHA
     case TLS_DHE_RSA_WITH_AES_256_CBC_SHA :
         specs->bulk_cipher_algorithm = wolfssl_aes;
-        specs->cipher_type           = block;
+        specs->cipher_type           = wolf__block;
         specs->mac_algorithm         = sha_mac;
         specs->kea                   = diffie_hellman_kea;
         specs->sig_algo              = rsa_sa_algo;
@@ -2068,7 +2068,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_RSA_WITH_AES_128_GCM_SHA256
     case TLS_RSA_WITH_AES_128_GCM_SHA256 :
         specs->bulk_cipher_algorithm = wolfssl_aes_gcm;
-        specs->cipher_type           = aead;
+        specs->cipher_type           = wolf__aead;
         specs->mac_algorithm         = sha256_mac;
         specs->kea                   = rsa_kea;
         specs->sig_algo              = rsa_sa_algo;
@@ -2086,7 +2086,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_RSA_WITH_AES_256_GCM_SHA384
     case TLS_RSA_WITH_AES_256_GCM_SHA384 :
         specs->bulk_cipher_algorithm = wolfssl_aes_gcm;
-        specs->cipher_type           = aead;
+        specs->cipher_type           = wolf__aead;
         specs->mac_algorithm         = sha384_mac;
         specs->kea                   = rsa_kea;
         specs->sig_algo              = rsa_sa_algo;
@@ -2104,7 +2104,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_DHE_RSA_WITH_AES_128_GCM_SHA256
     case TLS_DHE_RSA_WITH_AES_128_GCM_SHA256 :
         specs->bulk_cipher_algorithm = wolfssl_aes_gcm;
-        specs->cipher_type           = aead;
+        specs->cipher_type           = wolf__aead;
         specs->mac_algorithm         = sha256_mac;
         specs->kea                   = diffie_hellman_kea;
         specs->sig_algo              = rsa_sa_algo;
@@ -2122,7 +2122,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_DHE_RSA_WITH_AES_256_GCM_SHA384
     case TLS_DHE_RSA_WITH_AES_256_GCM_SHA384 :
         specs->bulk_cipher_algorithm = wolfssl_aes_gcm;
-        specs->cipher_type           = aead;
+        specs->cipher_type           = wolf__aead;
         specs->mac_algorithm         = sha384_mac;
         specs->kea                   = diffie_hellman_kea;
         specs->sig_algo              = rsa_sa_algo;
@@ -2140,7 +2140,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_RSA_WITH_CAMELLIA_128_CBC_SHA
     case TLS_RSA_WITH_CAMELLIA_128_CBC_SHA :
         specs->bulk_cipher_algorithm = wolfssl_camellia;
-        specs->cipher_type           = block;
+        specs->cipher_type           = wolf__block;
         specs->mac_algorithm         = sha_mac;
         specs->kea                   = rsa_kea;
         specs->sig_algo              = rsa_sa_algo;
@@ -2157,7 +2157,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_RSA_WITH_CAMELLIA_256_CBC_SHA
     case TLS_RSA_WITH_CAMELLIA_256_CBC_SHA :
         specs->bulk_cipher_algorithm = wolfssl_camellia;
-        specs->cipher_type           = block;
+        specs->cipher_type           = wolf__block;
         specs->mac_algorithm         = sha_mac;
         specs->kea                   = rsa_kea;
         specs->sig_algo              = rsa_sa_algo;
@@ -2174,7 +2174,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_RSA_WITH_CAMELLIA_128_CBC_SHA256
     case TLS_RSA_WITH_CAMELLIA_128_CBC_SHA256 :
         specs->bulk_cipher_algorithm = wolfssl_camellia;
-        specs->cipher_type           = block;
+        specs->cipher_type           = wolf__block;
         specs->mac_algorithm         = sha256_mac;
         specs->kea                   = rsa_kea;
         specs->sig_algo              = rsa_sa_algo;
@@ -2191,7 +2191,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_RSA_WITH_CAMELLIA_256_CBC_SHA256
     case TLS_RSA_WITH_CAMELLIA_256_CBC_SHA256 :
         specs->bulk_cipher_algorithm = wolfssl_camellia;
-        specs->cipher_type           = block;
+        specs->cipher_type           = wolf__block;
         specs->mac_algorithm         = sha256_mac;
         specs->kea                   = rsa_kea;
         specs->sig_algo              = rsa_sa_algo;
@@ -2208,7 +2208,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_DHE_RSA_WITH_CAMELLIA_128_CBC_SHA
     case TLS_DHE_RSA_WITH_CAMELLIA_128_CBC_SHA :
         specs->bulk_cipher_algorithm = wolfssl_camellia;
-        specs->cipher_type           = block;
+        specs->cipher_type           = wolf__block;
         specs->mac_algorithm         = sha_mac;
         specs->kea                   = diffie_hellman_kea;
         specs->sig_algo              = rsa_sa_algo;
@@ -2225,7 +2225,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_DHE_RSA_WITH_CAMELLIA_256_CBC_SHA
     case TLS_DHE_RSA_WITH_CAMELLIA_256_CBC_SHA :
         specs->bulk_cipher_algorithm = wolfssl_camellia;
-        specs->cipher_type           = block;
+        specs->cipher_type           = wolf__block;
         specs->mac_algorithm         = sha_mac;
         specs->kea                   = diffie_hellman_kea;
         specs->sig_algo              = rsa_sa_algo;
@@ -2242,7 +2242,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_DHE_RSA_WITH_CAMELLIA_128_CBC_SHA256
     case TLS_DHE_RSA_WITH_CAMELLIA_128_CBC_SHA256 :
         specs->bulk_cipher_algorithm = wolfssl_camellia;
-        specs->cipher_type           = block;
+        specs->cipher_type           = wolf__block;
         specs->mac_algorithm         = sha256_mac;
         specs->kea                   = diffie_hellman_kea;
         specs->sig_algo              = rsa_sa_algo;
@@ -2259,7 +2259,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_DHE_RSA_WITH_CAMELLIA_256_CBC_SHA256
     case TLS_DHE_RSA_WITH_CAMELLIA_256_CBC_SHA256 :
         specs->bulk_cipher_algorithm = wolfssl_camellia;
-        specs->cipher_type           = block;
+        specs->cipher_type           = wolf__block;
         specs->mac_algorithm         = sha256_mac;
         specs->kea                   = diffie_hellman_kea;
         specs->sig_algo              = rsa_sa_algo;
@@ -2276,7 +2276,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_TLS_DH_anon_WITH_AES_128_CBC_SHA
     case TLS_DH_anon_WITH_AES_128_CBC_SHA :
         specs->bulk_cipher_algorithm = wolfssl_aes;
-        specs->cipher_type           = block;
+        specs->cipher_type           = wolf__block;
         specs->mac_algorithm         = sha_mac;
         specs->kea                   = diffie_hellman_kea;
         specs->sig_algo              = anonymous_sa_algo;
@@ -2295,7 +2295,7 @@ int GetCipherSpec(word16 side, byte cipherSuite0, byte cipherSuite,
 #ifdef BUILD_WDM_WITH_NULL_SHA256
         case WDM_WITH_NULL_SHA256 :
             specs->bulk_cipher_algorithm = wolfssl_cipher_null;
-            specs->cipher_type           = stream;
+            specs->cipher_type           = wolf__stream;
             specs->mac_algorithm         = sha256_mac;
             specs->kea                   = no_kea;
             specs->sig_algo              = anonymous_sa_algo;
@@ -3628,7 +3628,7 @@ int SetKeysSide(WOLFSSL* ssl, enum encrypt_side side)
             ssl->keys.sequence_number_hi = keys->sequence_number_hi;
             ssl->keys.sequence_number_lo = keys->sequence_number_lo;
             #ifdef HAVE_AEAD
-                if (ssl->specs.cipher_type == aead) {
+                if (ssl->specs.cipher_type == wolf__aead) {
                     /* Initialize the AES-GCM/CCM explicit IV to a zero. */
                     XMEMCPY(ssl->keys.aead_exp_IV, keys->aead_exp_IV,
                             AEAD_MAX_EXP_SZ);
@@ -3648,7 +3648,7 @@ int SetKeysSide(WOLFSSL* ssl, enum encrypt_side side)
             ssl->keys.peer_sequence_number_hi = keys->peer_sequence_number_hi;
             ssl->keys.peer_sequence_number_lo = keys->peer_sequence_number_lo;
             #ifdef HAVE_AEAD
-                if (ssl->specs.cipher_type == aead) {
+                if (ssl->specs.cipher_type == wolf__aead) {
                     /* Initialize decrypt implicit IV by decrypt side */
                     if (ssl->options.side == WOLFSSL_SERVER_END) {
                         XMEMCPY(ssl->keys.aead_dec_imp_IV,
@@ -3701,7 +3701,7 @@ int StoreKeys(WOLFSSL* ssl, const byte* keyData, int side)
 #ifdef WOLFSSL_MULTICAST
     if (ssl->options.haveMcast) {
         /* Use the same keys for encrypt and decrypt. */
-        if (ssl->specs.cipher_type != aead) {
+        if (ssl->specs.cipher_type != wolf__aead) {
             sz = ssl->specs.hash_size;
     #ifndef WOLFSSL_AEAD_ONLY
 
@@ -3744,7 +3744,7 @@ int StoreKeys(WOLFSSL* ssl, const byte* keyData, int side)
         XMEMCPY(keys->server_write_IV, &keyData[i], sz);
 
 #ifdef HAVE_AEAD
-        if (ssl->specs.cipher_type == aead) {
+        if (ssl->specs.cipher_type == wolf__aead) {
             /* Initialize the AES-GCM/CCM explicit IV to a zero. */
         #ifdef WOLFSSL_DTLS
             if (scr_copy) {
@@ -3760,7 +3760,7 @@ int StoreKeys(WOLFSSL* ssl, const byte* keyData, int side)
     }
 #endif /* WOLFSSL_MULTICAST */
 
-    if (ssl->specs.cipher_type != aead) {
+    if (ssl->specs.cipher_type != wolf__aead) {
         sz = ssl->specs.hash_size;
         if (side & PROVISION_CLIENT) {
     #ifndef WOLFSSL_AEAD_ONLY
@@ -3825,7 +3825,7 @@ int StoreKeys(WOLFSSL* ssl, const byte* keyData, int side)
     }
 
 #ifdef HAVE_AEAD
-    if (ssl->specs.cipher_type == aead) {
+    if (ssl->specs.cipher_type == wolf__aead) {
         /* Initialize the AES-GCM/CCM explicit IV to a zero. */
     #ifdef WOLFSSL_DTLS
         if (scr_copy)

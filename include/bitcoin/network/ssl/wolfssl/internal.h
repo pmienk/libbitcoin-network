@@ -4360,8 +4360,9 @@ enum ClientCertificateType {
 };
 
 
+// HACK: removed `stream`, `block`, and `aead` from global namespace via rename.
 #ifndef WOLFSSL_AEAD_ONLY
-enum CipherType { stream, block, aead };
+enum CipherType { wolf__stream, wolf__block, wolf__aead };
 #else
 enum CipherType { aead };
 #endif
