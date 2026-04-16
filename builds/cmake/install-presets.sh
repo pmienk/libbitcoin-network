@@ -46,14 +46,14 @@ if [[ -z ${secp256k1_TAG} ]]; then
 fi
 
 if [[ -z ${libbitcoin_system_OWNER} ]]; then
-    libbitcoin_system_OWNER="pmienk"
+    libbitcoin_system_OWNER="libbitcoin"
 fi
 if [[ -z ${libbitcoin_system_TAG} ]]; then
     libbitcoin_system_TAG="master"
 fi
 
 if [[ -z ${libbitcoin_network_OWNER} ]]; then
-    libbitcoin_network_OWNER="pmienk"
+    libbitcoin_network_OWNER="libbitcoin"
 fi
 if [[ -z ${libbitcoin_network_TAG} ]]; then
     libbitcoin_network_TAG="master"

@@ -17,6 +17,8 @@ REM --build-version version     Build MSVC version.
 REM --build-src-dir path        Location of sources.
 REM --build-full-repositories   Sync full github repositories.
 REM --build-use-local-src       Use existing sources in build-src-dir path.
+REM --build-mode mode           Determines action on target.
+REM                               Default: Rebuild
 REM --build-symbols mode        Determines treatment of symbols.
 REM                               Values: default, disabled, public-only
 REM --verbose                   Display verbose script output.
@@ -32,14 +34,14 @@ if "!NUGET_EXE!" == "" (
 )
 
 if "!libbitcoin_system_OWNER!" == "" (
-    set "libbitcoin_system_OWNER=pmienk"
+    set "libbitcoin_system_OWNER=libbitcoin"
 )
 if "!libbitcoin_system_TAG!" == "" (
     set "libbitcoin_system_TAG=master"
 )
 
 if "!libbitcoin_network_OWNER!" == "" (
-    set "libbitcoin_network_OWNER=pmienk"
+    set "libbitcoin_network_OWNER=libbitcoin"
 )
 if "!libbitcoin_network_TAG!" == "" (
     set "libbitcoin_network_TAG=master"
@@ -162,7 +164,7 @@ if "!libbitcoin_network_TAG!" == "" (
     if %ERRORLEVEL% neq 0 (
         exit /b %ERRORLEVEL%
     )
-    if "!BUILD_SKIP_TESTS!" != "yes" (
+    if not "!BUILD_SKIP_TESTS!" == "yes" (
         call :build_msbuild "libbitcoin-network" "builds\msvc\%proj_version%" "libbitcoin-network-test"
     if %ERRORLEVEL% neq 0 (
         exit /b %ERRORLEVEL%
@@ -195,6 +197,9 @@ if "!libbitcoin_network_TAG!" == "" (
         shift
     ) else if "%~1" == "--build-version" (
         set "BUILD_VERSION=%~2"
+        shift
+    ) else if "%!1" == "--build-mode" (
+        set "BUILD_MODE=%~2"
         shift
     ) else if "%!1" == "--build-symbols" (
         set "BUILD_SYMBOLS=%~2"
@@ -274,10 +279,16 @@ if "!libbitcoin_network_TAG!" == "" (
     set "RELATIVE_PATH=%~2"
     set "TARGET=%~3"
 
-    if "%TARGET%" == "" (
-        set "TARGET_ARG="
+    if not "%TARGET%" == "" (
+        if not "!BUILD_MODE!" == "" (
+            set "TARGET_ARG=/target:%TARGET%:!BUILD_MODE!"
+        ) else (
+            set "TARGET_ARG=/target:%TARGET%"
+        )
     ) else (
-        set "TARGET_ARG=/target:%TARGET%:Rebuild"
+        if not "!BUILD_MODE!" == "" (
+            set "TARGET_ARG=/target:!BUILD_MODE!"
+        )
     )
 
     set "SYMBOLS_ARG="
@@ -327,6 +338,7 @@ if "!libbitcoin_network_TAG!" == "" (
     call :msg "BUILD_SRC_DIR                   : !BUILD_SRC_DIR!"
     call :msg "BUILD_FULL_REPOSITORIES         : !BUILD_FULL_REPOSITORIES!"
     call :msg "BUILD_USE_LOCAL_SRC             : !BUILD_USE_LOCAL_SRC!"
+    call :msg "BUILD_MODE                      : !BUILD_MODE!"
     call :msg "BUILD_SYMBOLS                   : !BUILD_SYMBOLS!"
     call :msg "DISPLAY_VERBOSE                 : !DISPLAY_VERBOSE!"
     call :msg "SHOW_HELP                       : !SHOW_HELP!"
@@ -355,6 +367,8 @@ if "!libbitcoin_network_TAG!" == "" (
     call :msg "--build-src-dir path        Location of sources."
     call :msg "--build-full-repositories   Sync full github repositories."
     call :msg "--build-use-local-src       Use existing sources in build-src-dir path."
+    call :msg "--build-mode mode           Determines action on target."
+    call :msg "                              Default: Rebuild"
     call :msg "--build-symbols mode        Determines treatment of symbols."
     call :msg "                              Values: default, disabled, public-only"
     call :msg "--verbose                   Display verbose script output."
