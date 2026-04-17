@@ -24,6 +24,9 @@
 namespace libbitcoin {
 namespace network {
 
+#define BIND_SAFE(bound) \
+    [call = std::move(bound)] (auto&&... args) mutable NOEXCEPT \
+    { return call(std::forward<decltype(args)>(args)...); }
 #define BIND_SHARED(method, args) \
     std::bind(std::forward<Method>(method), shared_from_base<Derived>(), \
         std::forward<Args>(args)...)
