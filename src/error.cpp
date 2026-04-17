@@ -428,7 +428,7 @@ code asio_to_error_code(const boost_code& ec) NOEXCEPT
     if (!ec)
         return error::success;
 
-    // boost::system::system_category() is aliased for netdb and addrinfo.
+    // In msvc boost::system::system_category() aliases netdb and addrinfo.
     if (ec.category() == boost::asio::error::get_system_category())
     {
         switch (static_cast<asio_basic_error_t>(ec.value()))
@@ -475,8 +475,8 @@ code asio_to_error_code(const boost_code& ec) NOEXCEPT
             case asio_basic_error_t::no_buffer_space:
                 return error::invalid_configuration;
 
-            // This duplicates would_block except on MSVC.
-            ////case asio_basic_error_t::try_again:
+                // This duplicates would_block except on MSVC.
+                ////case asio_basic_error_t::try_again:
             case asio_basic_error_t::no_such_device:
                 return error::file_system;
 
@@ -489,6 +489,11 @@ code asio_to_error_code(const boost_code& ec) NOEXCEPT
                 return error::channel_timeout;
         }
 
+#if defined(HAVE_MSC)
+    }
+    if (ec.category() == boost::asio::error::get_netdb_category())
+    {
+#endif
         switch (static_cast<asio_netdb_error_t>(ec.value()))
         {
             // connect-resolve
@@ -501,6 +506,11 @@ code asio_to_error_code(const boost_code& ec) NOEXCEPT
                 return error::operation_failed;
         }
 
+#if defined(HAVE_MSC)
+    }
+    if (ec.category() == boost::asio::error::get_addrinfo_category())
+    {
+#endif
         switch (static_cast<asio_addrinfo_error_t>(ec.value()))
         {
             // connect-resolve
@@ -510,7 +520,6 @@ code asio_to_error_code(const boost_code& ec) NOEXCEPT
         }
     }
 
-    // Independent category.
     if (ec.category() == boost::asio::error::get_misc_category())
     {
         switch (static_cast<asio_misc_error_t>(ec.value()))

@@ -210,7 +210,18 @@ BOOST_AUTO_TEST_CASE(connector__connect__stop__resolve_failed_race_operation_can
             [&](const code& ec, const socket::ptr& socket) NOEXCEPT
             {
                 ec1 = ec;
-                result &= (((ec == error::resolve_failed) && !socket) || (ec == error::operation_canceled));
+                const auto expected = ((ec == error::resolve_failed && !socket) || (ec == error::operation_canceled));
+                if (!expected)
+                {
+                    // Temporary diagnostic.
+                    std::cerr << "Unexpected resolver race error on macOS:"
+                        << "\n  value    = " << ec.value()
+                        << "\n  category = " << ec.category().name()
+                        << "\n  message  = " << ec.message()
+                        << std::endl;
+                }
+
+                result &= expected;
             });
 
         std::this_thread::sleep_for(microseconds(1));
