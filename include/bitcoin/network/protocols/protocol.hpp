@@ -78,7 +78,7 @@ protected:
     template <class Derived, typename Method, typename... Args>
     inline auto bind(Method&& method, Args&&... args) NOEXCEPT
     {
-        return BIND_SHARED(method, args);
+        return BIND_SAFE(BIND_SHARED(method, args));
     }
 
     /// Post base or derived class method to channel strand (use POST).
@@ -86,7 +86,7 @@ protected:
     inline auto post(Method&& method, Args&&... args) NOEXCEPT
     {
         return boost::asio::post(channel_->strand(),
-            BIND_SHARED(method, args));
+            BIND_SAFE(BIND_SHARED(method, args)));
     }
 
     /// Post base or derived class method to network threadpool (use PARALLEL).
@@ -94,7 +94,7 @@ protected:
     inline auto parallel(Method&& method, Args&&... args) NOEXCEPT
     {
         return boost::asio::post(channel_->service(),
-            BIND_SHARED(method, args));
+            BIND_SAFE(BIND_SHARED(method, args)));
     }
 
     /// Subscribe to messages broadcasts by type (use SUBSCRIBE_BROADCAST).
@@ -104,14 +104,14 @@ protected:
     {
         BC_ASSERT(stranded());
 
-        const auto bouncer = [self = shared_from_this(),
-            handler = BIND_SHARED(method, args)]
+        auto bound = BIND_SHARED(method, args);
+        const auto wrap = [self = shared_from_this(), call = std::move(bound)]
         (const auto& ec, const typename Message::cptr& message, auto id)
         {
-            return self->handle_broadcast<Message>(ec, message, id, handler);
+            return self->handle_broadcast<Message>(ec, message, id, call);
         };
 
-        session_->subscribe<Message>(bouncer, channel_->identifier());
+        session_->subscribe<Message>(wrap, channel_->identifier());
     }
 
     /// Unsubscribe to messages broadcasts by type (use UNSUBSCRIBE_BROADCAST).
