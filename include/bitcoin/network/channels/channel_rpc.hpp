@@ -95,7 +95,7 @@ public:
         result_handler&& handler) NOEXCEPT;
     inline void send_result(rpc::value_t&& result, size_t size_hint,
         result_handler&& handler) NOEXCEPT;
-    inline void send_notification(const rpc::string_t& method,
+    inline void send_notification(rpc::string_t&& method,
         rpc::params_t&& notification, size_t size_hint,
         result_handler&& handler) NOEXCEPT;
 
