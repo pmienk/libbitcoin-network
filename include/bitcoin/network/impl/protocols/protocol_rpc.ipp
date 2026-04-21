@@ -70,12 +70,12 @@ inline void CLASS::send_result(rpc::value_t&& result, size_t size_hint,
 }
 
 TEMPLATE
-inline void CLASS::send_notification(const rpc::string_t& method,
+inline void CLASS::send_notification(rpc::string_t&& method,
     rpc::params_t&& notification, size_t size_hint,
     result_handler&& handler) NOEXCEPT
 {
-    channel_->send_notification(method, std::move(notification), size_hint,
-        std::move(handler));
+    channel_->send_notification(std::move(method), std::move(notification),
+        size_hint, std::move(handler));
 }
 
 } // namespace network
