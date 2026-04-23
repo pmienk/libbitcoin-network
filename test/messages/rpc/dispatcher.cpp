@@ -38,6 +38,7 @@ struct mock_methods
         method<"with_nullify", std::string, nullable<double>, nullable<bool>>{ "a", "b", "c" },
         method<"with_combine", std::string, nullable<bool>, optional<4.2>>{ "a", "b", "c" },
         method<"not_required", nullable<bool>, optional<4.2>>{ "a", "b" },
+        method<"text_options", optional<"a"_t>, optional<"b"_t>>{ "a", "b" },
         method<"ping", messages::peer::ping::cptr>{ "message" }
     };
 
@@ -54,7 +55,8 @@ struct mock_methods
     using with_nullify = at<3>;
     using with_combine = at<4>;
     using not_required = at<5>;
-    using ping = at<6>;
+    using text_options = at<6>;
+    using ping = at<7>;
 };
 
 using mock_interface = publish<mock_methods>;
@@ -803,6 +805,59 @@ BOOST_AUTO_TEST_CASE(dispatcher__notify__not_required_named_params__expected)
     BOOST_REQUIRE(!ec4);
     BOOST_REQUIRE_EQUAL(result_a, true);
     BOOST_REQUIRE_EQUAL(result_b, 4.2);
+    instance.stop(error::service_stopped);
+}
+
+//  method<"text_options", optional<"a"_t>, optional<"b"_t>>{ "a", "b" },
+
+
+BOOST_AUTO_TEST_CASE(dispatcher__notify__text_options_positional_params__expected)
+{
+    distributor_mock instance{};
+    bool called{};
+    string_t result_a{};
+    string_t result_b{};
+
+    instance.subscribe(
+        [&](const code&, mock_interface::text_options, const std::string& a, const std::string& b)
+        {
+            if (called) return false;
+            called = true;
+            result_a = a;
+            result_b = b;
+            return true;
+        });
+
+    const auto ec1 = instance.notify(
+    {
+        .method = "text_options",
+        .params = { array_t{ string_t{ "c" } } }
+    });
+
+    const auto ec2 = instance.notify(
+    {
+        .method = "text_options",
+        .params = { array_t{ string_t{ "c" }, string_t{ "d" } } }
+    });
+
+    const auto ec3 = instance.notify(
+    {
+        .method = "text_options",
+        .params = { array_t{} }
+    });
+
+    const auto ec4 = instance.notify(
+    {
+        .method = "text_options",
+        .params = { array_t{ boolean_type{ false }, number_t{ 42.0 } } }
+    });
+
+    BOOST_CHECK(!ec1);
+    BOOST_CHECK(!ec2);
+    BOOST_CHECK(!ec3);
+    BOOST_CHECK_EQUAL(ec4, error::unexpected_type);
+    BOOST_CHECK_EQUAL(result_a, "c");
+    BOOST_CHECK_EQUAL(result_b, "b");
     instance.stop(error::service_stopped);
 }
 
