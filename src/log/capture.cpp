@@ -55,6 +55,7 @@ bool capture::stranded() const NOEXCEPT
 
 // start
 // ----------------------------------------------------------------------------
+// WARNING: depending on the std::istream configuration, getline() may throw.
 
 void capture::start() NOEXCEPT
 {
