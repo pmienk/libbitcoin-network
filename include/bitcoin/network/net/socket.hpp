@@ -68,7 +68,7 @@ public:
 
     /// Outbound connections.
     /// Endpoint represents the peer or client (non-proxy) that the connector
-    /// attempted to reach. Address holds a copy of the p2p address associated
+    /// attempted to reach. Address holds a copy of the tcp address associated
     /// with the connection (or empty).
     socket(const logger& log, asio::context& service, const parameters& params,
         const config::address& address, const config::endpoint& endpoint,
@@ -110,18 +110,18 @@ public:
     virtual void connect(const asio::endpoints& range,
         result_handler&& handler) NOEXCEPT;
 
-    /// P2P (bitcoin/socks).
+    /// TCP (generic tcp, p2p).
     /// -----------------------------------------------------------------------
 
     /// Read full buffer from the socket, handler posted to socket strand.
-    virtual void p2p_read(const asio::mutable_buffer& out,
+    virtual void tcp_read(const asio::mutable_buffer& out,
         count_handler&& handler) NOEXCEPT;
 
     /// Write full buffer to the socket, handler posted to socket strand.
-    virtual void p2p_write(const asio::const_buffer& in,
+    virtual void tcp_write(const asio::const_buffer& in,
         count_handler&& handler) NOEXCEPT;
 
-    /// RPC (ovr tcp).
+    /// RPC (over tcp, electrum/stratum_v1).
     /// -----------------------------------------------------------------------
 
     /// Read rpc request from the socket, handler posted to socket strand.
@@ -283,10 +283,10 @@ private:
         const result_handler& handler) NOEXCEPT;
     void do_handshake(const result_handler& handler) NOEXCEPT;
 
-    // p2p
-    void do_p2p_read(const asio::mutable_buffer& out,
+    // tcp
+    void do_tcp_read(const asio::mutable_buffer& out,
         const count_handler& handler) NOEXCEPT;
-    void do_p2p_write(const asio::const_buffer& in,
+    void do_tcp_write(const asio::const_buffer& in,
         const count_handler& handler) NOEXCEPT;
 
     // tcp (rpc)
@@ -333,8 +333,8 @@ private:
     void handle_handshake(const boost_code& ec,
         const result_handler& handler) NOEXCEPT;
 
-    // p2p
-    void handle_p2p(const boost_code& ec, size_t size,
+    // tcp
+    void handle_tcp(const boost_code& ec, size_t size,
         const count_handler& handler) NOEXCEPT;
 
     // rpc (over tcp)
