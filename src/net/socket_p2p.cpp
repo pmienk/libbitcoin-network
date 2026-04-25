@@ -31,19 +31,19 @@ using namespace std::placeholders;
 
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
-// P2P Read.
+// TCP/P2P Read.
 // ----------------------------------------------------------------------------
 
-void socket::p2p_read(const asio::mutable_buffer& out,
+void socket::tcp_read(const asio::mutable_buffer& out,
     count_handler&& handler) NOEXCEPT
 {
     // asio::mutable_buffer is essentially a data_slab.
     boost::asio::dispatch(strand_,
-        std::bind(&socket::do_p2p_read,
+        std::bind(&socket::do_tcp_read,
             shared_from_this(), out, std::move(handler)));
 }
 
-void socket::do_p2p_read(const asio::mutable_buffer& out,
+void socket::do_tcp_read(const asio::mutable_buffer& out,
     const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
@@ -52,7 +52,7 @@ void socket::do_p2p_read(const asio::mutable_buffer& out,
     {
         VARIANT_DISPATCH_FUNCTION(boost::asio::async_read,
             get_tcp(), out,
-                std::bind(&socket::handle_p2p,
+                std::bind(&socket::handle_tcp,
                     shared_from_this(), _1, _2, handler));
     }
     catch (const std::exception& e)
@@ -62,19 +62,19 @@ void socket::do_p2p_read(const asio::mutable_buffer& out,
     }
 }
 
-// P2P Write.
+// TCP/P2P Write.
 // ----------------------------------------------------------------------------
 
-void socket::p2p_write(const asio::const_buffer& in,
+void socket::tcp_write(const asio::const_buffer& in,
     count_handler&& handler) NOEXCEPT
 {
     // asio::const_buffer is essentially a data_slice.
     boost::asio::dispatch(strand_,
-        std::bind(&socket::do_p2p_write,
+        std::bind(&socket::do_tcp_write,
             shared_from_this(), in, std::move(handler)));
 }
 
-void socket::do_p2p_write(const asio::const_buffer& in,
+void socket::do_tcp_write(const asio::const_buffer& in,
     const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
@@ -83,7 +83,7 @@ void socket::do_p2p_write(const asio::const_buffer& in,
     {
         VARIANT_DISPATCH_FUNCTION(boost::asio::async_write,
             get_tcp(), in,
-                std::bind(&socket::handle_p2p,
+                std::bind(&socket::handle_tcp,
                     shared_from_this(), _1, _2, handler));
     }
     catch (const std::exception& e)
@@ -93,10 +93,10 @@ void socket::do_p2p_write(const asio::const_buffer& in,
     }
 }
 
-// P2P (both).
+// TCP/P2P (both).
 // ----------------------------------------------------------------------------
 
-void socket::handle_p2p(const boost_code& ec, size_t size,
+void socket::handle_tcp(const boost_code& ec, size_t size,
     const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
@@ -108,7 +108,7 @@ void socket::handle_p2p(const boost_code& ec, size_t size,
     }
 
     const auto code = error::asio_to_error_code(ec);
-    if (code == error::unknown) logx("p2p", ec);
+    if (code == error::unknown) logx("tcp", ec);
     handler(code, size);
 }
 

@@ -168,7 +168,7 @@ void proxy::do_subscribe_stop(const result_handler& handler,
     complete(error::success);
 }
 
-// Wait.
+// Wait (all).
 // ----------------------------------------------------------------------------
 
 void proxy::wait(result_handler&& handler) NOEXCEPT
@@ -181,7 +181,7 @@ void proxy::cancel(result_handler&& handler) NOEXCEPT
     socket_->cancel(std::move(handler));
 }
 
-// TCP (generic).
+// TCP (generic tcp, p2p).
 // ----------------------------------------------------------------------------
 
 void proxy::read(const asio::mutable_buffer& buffer,
@@ -190,7 +190,7 @@ void proxy::read(const asio::mutable_buffer& buffer,
     boost::asio::dispatch(strand(),
         std::bind(&proxy::waiting, shared_from_this()));
 
-    socket_->p2p_read(buffer, std::move(handler));
+    socket_->tcp_read(buffer, std::move(handler));
 }
 
 void proxy::write(const asio::const_buffer& buffer,
@@ -201,7 +201,7 @@ void proxy::write(const asio::const_buffer& buffer,
             shared_from_this(), buffer, std::move(handler)));
 }
 
-// TCP-RPC.
+// RPC (over tcp, electrum/stratum_v1).
 // ----------------------------------------------------------------------------
 
 void proxy::read(http::flat_buffer& buffer, rpc::request& request,
@@ -240,7 +240,7 @@ void proxy::ws_write(const asio::const_buffer& in, bool binary,
     socket_->ws_write(in, binary, std::move(handler));
 }
 
-// HTTP (generic).
+// HTTP (generic/rpc).
 // ----------------------------------------------------------------------------
 
 // Method waiting() is invoked directly if read() is called from strand().
@@ -300,7 +300,7 @@ void proxy::write() NOEXCEPT
         return;
 
     auto& job = queue_.front();
-    socket_->p2p_write({ job.first.data(), job.first.size() },
+    socket_->tcp_write({ job.first.data(), job.first.size() },
         std::bind(&proxy::handle_write,
             shared_from_this(), _1, _2, job.first, job.second));
 }
