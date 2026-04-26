@@ -180,6 +180,10 @@ private:
 
     void do_tcp_write(const asio::const_buffer& payload,
         const count_handler& handler) NOEXCEPT;
+    void do_rpc_write_response(const ref<rpc::response>& response,
+        const count_handler& handler) NOEXCEPT;
+    void do_rpc_write_notification(const ref<rpc::request>& notification,
+        const count_handler& handler) NOEXCEPT;
     void do_subscribe_stop(const result_handler& handler,
         const result_handler& complete) NOEXCEPT;
 

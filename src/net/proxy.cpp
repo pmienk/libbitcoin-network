@@ -227,14 +227,40 @@ void proxy::read(http::flat_buffer& buffer, rpc::request& request,
 
 void proxy::write(rpc::response& response, count_handler&& handler) NOEXCEPT
 {
-    // TODO: compose (potentially full duplex).
-    socket_->rpc_write(response, std::move(handler));
+    writer call = std::bind(&proxy::do_rpc_write_response,
+        shared_from_this(), std::ref(response), std::move(handler));
+
+    boost::asio::dispatch(strand(),
+        std::bind(&proxy::do_write,
+            shared_from_this(), std::move(call)));
 }
 
 void proxy::write(rpc::request& notification, count_handler&& handler) NOEXCEPT
 {
-    // TODO: compose (full duplex).
-    socket_->rpc_notify(notification, std::move(handler));
+    writer call = std::bind(&proxy::do_rpc_write_notification,
+        shared_from_this(), std::ref(notification), std::move(handler));
+
+    boost::asio::dispatch(strand(),
+        std::bind(&proxy::do_write,
+            shared_from_this(), std::move(call)));
+}
+
+// private
+void proxy::do_rpc_write_response(const ref<rpc::response>& response,
+    const count_handler& handler) NOEXCEPT
+{
+    socket_->rpc_write(response.get(),
+        std::bind(&proxy::handle_write,
+            shared_from_this(), _1, _2, handler));
+}
+
+// private
+void proxy::do_rpc_write_notification(const ref<rpc::request>& notification,
+    const count_handler& handler) NOEXCEPT
+{
+    socket_->rpc_notify(notification.get(),
+        std::bind(&proxy::handle_write,
+            shared_from_this(), _1, _2, handler));
 }
 
 // WS (generic).
