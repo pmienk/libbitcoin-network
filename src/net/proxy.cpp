@@ -196,9 +196,21 @@ void proxy::read(const asio::mutable_buffer& buffer,
 void proxy::write(const asio::const_buffer& buffer,
     count_handler&& handler) NOEXCEPT
 {
+    writer call = std::bind(&proxy::do_tcp_write,
+        shared_from_this(), buffer, std::move(handler));
+
     boost::asio::dispatch(strand(),
         std::bind(&proxy::do_write,
-            shared_from_this(), buffer, std::move(handler)));
+            shared_from_this(), std::move(call)));
+}
+
+// private
+void proxy::do_tcp_write(const asio::const_buffer& buffer,
+    const count_handler& handler) NOEXCEPT
+{
+    socket_->tcp_write({ buffer.data(), buffer.size() },
+        std::bind(&proxy::handle_write,
+            shared_from_this(), _1, _2, handler));
 }
 
 // RPC (over tcp, electrum/stratum_v1).
@@ -215,14 +227,40 @@ void proxy::read(http::flat_buffer& buffer, rpc::request& request,
 
 void proxy::write(rpc::response& response, count_handler&& handler) NOEXCEPT
 {
-    // TODO: compose (potentially full duplex).
-    socket_->rpc_write(response, std::move(handler));
+    writer call = std::bind(&proxy::do_rpc_write_response,
+        shared_from_this(), std::ref(response), std::move(handler));
+
+    boost::asio::dispatch(strand(),
+        std::bind(&proxy::do_write,
+            shared_from_this(), std::move(call)));
 }
 
 void proxy::write(rpc::request& notification, count_handler&& handler) NOEXCEPT
 {
-    // TODO: compose (full duplex).
-    socket_->rpc_notify(notification, std::move(handler));
+    writer call = std::bind(&proxy::do_rpc_write_notification,
+        shared_from_this(), std::ref(notification), std::move(handler));
+
+    boost::asio::dispatch(strand(),
+        std::bind(&proxy::do_write,
+            shared_from_this(), std::move(call)));
+}
+
+// private
+void proxy::do_rpc_write_response(const ref<rpc::response>& response,
+    const count_handler& handler) NOEXCEPT
+{
+    socket_->rpc_write(response.get(),
+        std::bind(&proxy::handle_write,
+            shared_from_this(), _1, _2, handler));
+}
+
+// private
+void proxy::do_rpc_write_notification(const ref<rpc::request>& notification,
+    const count_handler& handler) NOEXCEPT
+{
+    socket_->rpc_notify(notification.get(),
+        std::bind(&proxy::handle_write,
+            shared_from_this(), _1, _2, handler));
 }
 
 // WS (generic).
@@ -266,27 +304,22 @@ void proxy::write(http::response& response,
 // interleaving-async-write-calls
 
 // private
-void proxy::do_write(const asio::const_buffer& payload,
-    const count_handler& handler) NOEXCEPT
+void proxy::do_write(const writer& call) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
     if (stopped())
     {
+        // Does not queue new work after stop.
         LOGQ("Payload write abort [" << endpoint() << "]");
-        handler(error::channel_stopped, {});
         return;
     }
 
     const auto started = !queue_.empty();
-    queue_.push_back(std::make_pair(payload, handler));
-    total_ = ceilinged_add(total_.load(), payload.size());
-    backlog_ = ceilinged_add(backlog_.load(), payload.size());
+    queue_.push_back(call);
+    ////LOGV("Enqueue write for [" << endpoint() << "]: " << queue_.size());
 
-    ////LOGV("Queue for [" << endpoint() << "]: " << queue_.size()
-    ////    << " (" << backlog_.load() << " of " << total_.load() << " bytes)");
-
-    // Start the loop if it wasn't already started.
+    // Start the asynchronous loop if it wasn't already started.
     if (!started)
         write();
 }
@@ -296,37 +329,24 @@ void proxy::write() NOEXCEPT
 {
     BC_ASSERT(stranded());
 
-    if (queue_.empty())
-        return;
-
-    auto& job = queue_.front();
-    socket_->tcp_write({ job.first.data(), job.first.size() },
-        std::bind(&proxy::handle_write,
-            shared_from_this(), _1, _2, job.first, job.second));
+    // Invokes oldest writer on the queue, completion invokes handle_write.
+    if (!queue_.empty())
+        queue_.front()();
 }
 
 // private
 void proxy::handle_write(const code& ec, size_t bytes,
-    const asio::const_buffer& /* LOG_ONLY(payload) */,
     const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
+    BC_ASSERT(!queue_.empty());
 
-    if (stopped())
-    {
-        LOGQ("Send abort [" << endpoint() << "]");
-        return;
-    }
-
-    // guarded by write().
-    backlog_ = floored_subtract(backlog_.load(), queue_.front().first.size());
     queue_.pop_front();
+    total_ = ceilinged_add(total_.load(), bytes);
+    ////LOGV("Dequeue write for [" << endpoint() << "]: " << queue_.size()
+    ////    << " (" << total_.load() << " channel sent)");
 
-    ////LOGV("Dequeue for [" << endpoint() << "]: " << queue_.size()
-    ////    << " (" << backlog_.load() << " backlog)");
-
-    // All handlers must be invoked, so continue regardless of error state.
-    // Handlers are invoked in queued order, after all outstanding complete.
+    // All handlers must be invoked unless stopped, so continue despite code.
     write();
     handler(ec, bytes);
 }
@@ -352,11 +372,6 @@ bool proxy::stranded() const NOEXCEPT
 bool proxy::secure() const NOEXCEPT
 {
     return socket_->secure();
-}
-
-uint64_t proxy::backlog() const NOEXCEPT
-{
-    return backlog_.load(std::memory_order_relaxed);
 }
 
 uint64_t proxy::total() const NOEXCEPT

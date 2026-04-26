@@ -112,7 +112,7 @@ void channel::handle_monitor(const code& ec) NOEXCEPT
 
 // Timers.
 // ----------------------------------------------------------------------------
-// TODO: build DoS protection around rate_limit_, backlog(), total(), and time.
+// TODO: build DoS protection around rate_limit_, total(), and time.
 // A restarted timer invokes completion handler with error::operation_canceled.
 // Called from start or strand.
 
