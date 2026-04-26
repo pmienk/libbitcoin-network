@@ -36,6 +36,10 @@ namespace network {
 /// Abstract, thread safe except some methods requiring strand.
 /// Handles all channel communication, error handling, and logging.
 /// Caller must retain ownership of read/write buffers until handler invoked.
+/// Full duplex writes (non-http) are queued to prevent interleaving.
+/// Completion handler is invoked once write is complete, at which point the
+/// next queued write is invoked. When a channel stops with pending writes the
+/// write queue is purged without invoke of the purged handlers.
 class BCT_API proxy
   : public enable_shared_from_base<proxy>, public reporter
 {
@@ -85,9 +89,6 @@ public:
     /// Connection is currently secured (TLS or comparable for socket type).
     bool secure() const NOEXCEPT;
 
-    /// The number of bytes in the write backlog.
-    uint64_t backlog() const NOEXCEPT;
-
     /// The total number of bytes queued/sent to the remote endpoint.
     uint64_t total() const NOEXCEPT;
 
@@ -129,6 +130,7 @@ protected:
         count_handler&& handler) NOEXCEPT;
 
     /// Send a complete TCP message to the remote endpoint.
+    /// Handler may not be invoked in the case of a stopped channel.
     virtual void write(const asio::const_buffer& buffer,
         count_handler&& handler) NOEXCEPT;
 
@@ -140,10 +142,12 @@ protected:
         count_handler&& handler) NOEXCEPT;
 
     /// Write rpc response to the socket (json buffer in body).
+    /// Handler may not be invoked in the case of a stopped channel.
     virtual void write(rpc::response& response,
         count_handler&& handler) NOEXCEPT;
 
     /// Write rpc notification (request) to the socket (json buffer in body).
+    /// Handler may not be invoked in the case of a stopped channel.
     virtual void write(rpc::request& notification,
         count_handler&& handler) NOEXCEPT;
 
@@ -155,6 +159,7 @@ protected:
         count_handler&& handler) NOEXCEPT;
 
     /// Write full buffer to the websocket (post-upgrade), specify binary/text.
+    /// Handler may not be invoked in the case of a stopped channel.
     virtual void ws_write(const asio::const_buffer& in, bool binary,
         count_handler&& handler) NOEXCEPT;
 
@@ -170,22 +175,22 @@ protected:
         count_handler&& handler) NOEXCEPT;
 
 private:
-    typedef std::deque<std::pair<asio::const_buffer, count_handler>> queue;
+    typedef std::function<void()> writer;
+    typedef std::deque<writer> queue;
 
+    void do_tcp_write(const asio::const_buffer& payload,
+        const count_handler& handler) NOEXCEPT;
     void do_subscribe_stop(const result_handler& handler,
         const result_handler& complete) NOEXCEPT;
 
     // Implement chunked write with result handler.
     void write() NOEXCEPT;
-    void do_write(const asio::const_buffer& payload,
-        const count_handler& handler) NOEXCEPT;
+    void do_write(const writer& call) NOEXCEPT;
     void handle_write(const code& ec, size_t bytes,
-        const asio::const_buffer& payload,
         const count_handler& handler) NOEXCEPT;
 
     // These are thread safe.
     std::atomic_bool paused_{ true };
-    std::atomic<uint64_t> backlog_{};
     std::atomic<uint64_t> total_{};
     socket::ptr socket_;
 
