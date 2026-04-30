@@ -18,7 +18,7 @@
  */
 #include "../test.hpp"
 
-#if defined(HAVE_SLOW_TESTS)
+////#if defined(HAVE_SLOW_TESTS)
 
 using namespace http;
 using namespace network::http;
@@ -26,76 +26,116 @@ using namespace network::http;
 struct accessor
   : public body::reader
 {
+    // Forwarding constructor required because base is explicit and templated.
+    template <bool IsRequest, class Fields>
+    accessor(http::message_header<IsRequest, Fields>& header,
+        body::value_type& value) NOEXCEPT
+      : base(header, value)
+    {
+    }
+
     using base = body::reader;
-    using base::reader;
-    using base::to_reader;
+    using base::reader_;
 };
 
 BOOST_AUTO_TEST_SUITE(http_body_reader_tests)
 
-BOOST_AUTO_TEST_CASE(http_body_reader__to_reader__bogus__constructs_empty_reader)
+BOOST_AUTO_TEST_CASE(http_body_reader__init__bogus__constructs_empty_reader)
 {
-    message_header<false, fields> header{};
+    message_header<true, fields> header{};
     header.set(http::field::content_type, "bogus");
     body::value_type value{};
     value = empty_body::value_type{};
-    const auto variant = accessor::to_reader(header, value);
-    BOOST_REQUIRE(std::holds_alternative<empty_reader>(variant));
+    accessor reader(header, value);
+    length_type length{ max_size_t };
+    boost_code ec{};
+    reader.init(length, ec);
+    BOOST_REQUIRE(std::holds_alternative<empty_reader>(reader.reader_));
 }
 
-BOOST_AUTO_TEST_CASE(http_body_reader__to_reader__json__constructs_json_reader)
+BOOST_AUTO_TEST_CASE(http_body_reader__init__plain_json__constructs_json_reader)
 {
-    message_header<false, fields> header{};
+    message_header<true, fields> header{};
     header.set(http::field::content_type, "application/json");
     body::value_type value{};
     value = json_body::value_type{};
-    const auto variant = accessor::to_reader(header, value);
-    BOOST_REQUIRE(std::holds_alternative<json_reader>(variant));
+    value.plain_json = true;
+    accessor reader(header, value);
+    length_type length{ max_size_t };
+    boost_code ec{};
+    reader.init(length, ec);
+    BOOST_REQUIRE(std::holds_alternative<json_reader>(reader.reader_));
 }
 
-BOOST_AUTO_TEST_CASE(http_body_reader__to_reader__application_octet_stream__constructs_data_reader)
+BOOST_AUTO_TEST_CASE(http_body_reader__init__rpc_json__constructs_rpc_reader)
 {
-    message_header<false, fields> header{};
+    message_header<true, fields> header{};
+    header.set(http::field::content_type, "application/json");
+    body::value_type value{};
+    value = json_body::value_type{};
+    value.plain_json = false;
+    accessor reader(header, value);
+    length_type length{ max_size_t };
+    boost_code ec{};
+    reader.init(length, ec);
+    BOOST_REQUIRE(std::holds_alternative<rpc::reader>(reader.reader_));
+}
+
+BOOST_AUTO_TEST_CASE(http_body_reader__init__application_octet_stream__constructs_data_reader)
+{
+    message_header<true, fields> header{};
     header.set(http::field::content_type, "application/octet-stream");
     header.set(http::field::content_disposition, "bogus");
     body::value_type value{};
     value = chunk_body::value_type{};
-    const auto variant = accessor::to_reader(header, value);
-    BOOST_REQUIRE(std::holds_alternative<data_reader>(variant));
+    accessor reader(header, value);
+    length_type length{ max_size_t };
+    boost_code ec{};
+    reader.init(length, ec);
+    BOOST_REQUIRE(std::holds_alternative<data_reader>(reader.reader_));
 }
 
-BOOST_AUTO_TEST_CASE(http_body_reader__to_reader__application_octet_stream_with_attachment__constructs_file_reader)
+BOOST_AUTO_TEST_CASE(http_body_reader__init__application_octet_stream_with_attachment__constructs_file_reader)
 {
-    message_header<false, fields> header{};
+    message_header<true, fields> header{};
     header.set(http::field::content_type, "application/octet-stream");
     header.set(http::field::content_disposition, "filename=somenonsense.jpg");
     body::value_type value{};
     value = file_body::value_type{};
-    const auto variant = accessor::to_reader(header, value);
-    BOOST_REQUIRE(std::holds_alternative<file_reader>(variant));
+    accessor reader(header, value);
+    length_type length{ max_size_t };
+    boost_code ec{};
+    reader.init(length, ec);
+    BOOST_REQUIRE(std::holds_alternative<file_reader>(reader.reader_));
 }
 
-BOOST_AUTO_TEST_CASE(http_body_reader__to_reader__application_octet_stream_with_dirty_attachment__constructs_file_reader)
+BOOST_AUTO_TEST_CASE(http_body_reader__init__application_octet_stream_with_dirty_attachment__constructs_file_reader)
 {
-    message_header<false, fields> header{};
+    message_header<true, fields> header{};
     header.set(http::field::content_type, "application/octet-stream");
     header.set(http::field::content_disposition, "dirty 42; filename* = somenonsense.jpg; some other nonsense");
     body::value_type value{};
     value = file_body::value_type{};
-    const auto variant = accessor::to_reader(header, value);
-    BOOST_REQUIRE(std::holds_alternative<file_reader>(variant));
+    accessor reader(header, value);
+    length_type length{ max_size_t };
+    boost_code ec{};
+    reader.init(length, ec);
+    BOOST_REQUIRE(std::holds_alternative<file_reader>(reader.reader_));
 }
 
-BOOST_AUTO_TEST_CASE(http_body_reader__to_reader__text_plain__constructs_string_reader)
+BOOST_AUTO_TEST_CASE(http_body_reader__init__text_plain__constructs_string_reader)
 {
-    message_header<false, fields> header{};
+    message_header<true, fields> header{};
     header.set(http::field::content_type, "text/plain");
     body::value_type value{};
     value = string_body::value_type{};
-    const auto variant = accessor::to_reader(header, value);
-    BOOST_REQUIRE(std::holds_alternative<string_reader>(variant));
+    accessor reader(header, value);
+    length_type length{ max_size_t };
+    boost_code ec{};
+    reader.init(length, ec);
+    BOOST_REQUIRE(std::holds_alternative<string_reader>(reader.reader_));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
 
-#endif // HAVE_SLOW_TESTS
+///#endif // HAVE_SLOW_TESTS

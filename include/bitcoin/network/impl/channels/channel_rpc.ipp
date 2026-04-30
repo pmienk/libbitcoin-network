@@ -72,6 +72,9 @@ inline void CLASS::receive() NOEXCEPT
     const auto in = system::to_shared<rpc::request>();
     using namespace std::placeholders;
 
+    // Electrum, allow params singleton to be accepted as array.
+    in->strict = false;
+
     // Post handle_read to strand upon stop, error, or buffer full.
     read(request_buffer(), *in,
         std::bind(&channel_rpc::handle_receive,

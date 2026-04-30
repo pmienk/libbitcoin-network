@@ -2140,6 +2140,15 @@ BOOST_AUTO_TEST_CASE(error_t__code__jsonrpc_v1_requires_id__true_expected_messag
     BOOST_REQUIRE_EQUAL(ec.message(), "jsonrpc v1 requires id");
 }
 
+BOOST_AUTO_TEST_CASE(error_t__code__jsonrpc_params_not_collection__true_expected_message)
+{
+    constexpr auto value = error::jsonrpc_params_not_collection;
+    const auto ec = code(value);
+    BOOST_REQUIRE(ec);
+    BOOST_REQUIRE(ec == value);
+    BOOST_REQUIRE_EQUAL(ec.message(), "jsonrpc params not collection");
+}
+
 BOOST_AUTO_TEST_CASE(error_t__code__jsonrpc_reader_bad_buffer__true_expected_message)
 {
     constexpr auto value = error::jsonrpc_reader_bad_buffer;

@@ -233,15 +233,7 @@ DEFINE_JSON_FROM_TAG(request_t)
 
     if (instance.params.has_value())
     {
-        if (const auto& params = instance.params.value();
-            std::holds_alternative<array_t>(params))
-        {
-            object["params"] = value_from(std::get<array_t>(params));
-        }
-        else
-        {
-            object["params"] = value_from(std::get<object_t>(params));
-        }
+        object["params"] = value_from(instance.params.value());
     }
 
     value = object;
@@ -288,6 +280,14 @@ DEFINE_JSON_TO_TAG(request_t)
             request.params = params_t
             {
                 std::in_place_type<object_t>, value_to<object_t>(params)
+            };
+        }
+        else
+        {
+            // Allow non-standard rpc, required for Electrum compat.
+            request.params = params_t
+            {
+                std::in_place_type<value_t>, value_to<value_t>(params)
             };
         }
     }

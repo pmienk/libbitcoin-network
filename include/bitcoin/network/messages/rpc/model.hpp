@@ -161,6 +161,8 @@ using value_option = std::optional<value_t>;
 
 using params_t = std::variant
 <
+    // non-standard rpc, required for Electrum compat.
+    value_t,
     array_t,
     object_t
 >;

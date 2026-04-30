@@ -235,7 +235,7 @@ struct BCT_API body
             }, value.value());
         }
 
-    private:
+    protected:
         header& header_;
         value_type& value_;
         body_reader reader_;
