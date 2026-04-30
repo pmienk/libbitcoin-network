@@ -138,6 +138,22 @@ finish(boost_code& ec) NOEXCEPT
             value_.message.params.value()))
             ec = code{ error::jsonrpc_v1_requires_array_params };
     }
+    else if (value_.message.params.has_value() &&
+            std::holds_alternative<value_t>(value_.message.params.value()))
+    {
+        if (!value_.strict)
+        {
+            // Convert non-standard rpc, required for Electrum compat.
+            value_.message.params.emplace(array_t
+            {
+                std::get<value_t>(std::move(value_.message.params.value()))
+            });
+        }
+        else
+        {
+            ec = code{ error::jsonrpc_params_not_collection };
+        }
+    }
 }
 
 // rpc::body<response_t>::reader (unused)
