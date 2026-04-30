@@ -129,9 +129,6 @@ void proxy::stopping(const code& ec) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
-    // Clear the write buffer, which holds handlers.
-    queue_.clear();
-
     // Post stop handlers to strand and clear/stop accepting subscriptions.
     // The code provides information on the reason that the channel stopped.
     stop_subscriber_.stop(ec);
@@ -328,10 +325,11 @@ void proxy::do_write(const writer& call) NOEXCEPT
 void proxy::write() NOEXCEPT
 {
     BC_ASSERT(stranded());
+    if (queue_.empty())
+        return;
 
     // Invokes oldest writer on the queue, completion invokes handle_write.
-    if (!queue_.empty())
-        queue_.front()();
+    queue_.front()();
 }
 
 // private
@@ -339,7 +337,8 @@ void proxy::handle_write(const code& ec, size_t bytes,
     const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
-    BC_ASSERT(!queue_.empty());
+    if (queue_.empty())
+        return;
 
     queue_.pop_front();
     total_ = ceilinged_add(total_.load(), bytes);
