@@ -18,7 +18,7 @@
  */
 #include "../../test.hpp"
 
-#if defined(HAVE_SLOW_TESTS)
+////#if defined(HAVE_SLOW_TESTS)
 
 BOOST_AUTO_TEST_SUITE(rpc_body_writer_tests)
 
@@ -34,41 +34,41 @@ bool operator==(const asio::const_buffer& left, const asio::const_buffer& right)
 
 BOOST_AUTO_TEST_CASE(rpc_body_writer__construct1__default__default_response_terminated)
 {
-    rpc::body::value_type body{};
-    rpc::body::writer writer(body);
-    BOOST_REQUIRE(body.response.jsonrpc == version::undefined);
-    BOOST_REQUIRE(!body.response.id.has_value());
-    BOOST_REQUIRE(!body.response.error.has_value());
-    BOOST_REQUIRE(!body.response.result.has_value());
+    rpc::response_body::value_type body{};
+    rpc::response_body::writer writer(body);
+    BOOST_REQUIRE(body.message.jsonrpc == version::undefined);
+    BOOST_REQUIRE(!body.message.id.has_value());
+    BOOST_REQUIRE(!body.message.error.has_value());
+    BOOST_REQUIRE(!body.message.result.has_value());
 }
 
 BOOST_AUTO_TEST_CASE(rpc_body_writer__construct2__default__default_response_non_terminated)
 {
     response_header header{};
-    rpc::body::value_type body{};
-    rpc::body::writer writer(header, body);
-    BOOST_REQUIRE(body.response.jsonrpc == version::undefined);
-    BOOST_REQUIRE(!body.response.id.has_value());
-    BOOST_REQUIRE(!body.response.error.has_value());
-    BOOST_REQUIRE(!body.response.result.has_value());
+    rpc::response_body::value_type body{};
+    rpc::response_body::writer writer(header, body);
+    BOOST_REQUIRE(body.message.jsonrpc == version::undefined);
+    BOOST_REQUIRE(!body.message.id.has_value());
+    BOOST_REQUIRE(!body.message.error.has_value());
+    BOOST_REQUIRE(!body.message.result.has_value());
 }
 
 BOOST_AUTO_TEST_CASE(rpc_body_writer__init__default__success)
 {
-    rpc::body::value_type body{};
-    rpc::body::writer writer(body);
+    rpc::response_body::value_type body{};
+    rpc::response_body::writer writer(body);
     boost_code ec{};
     writer.init(ec);
     BOOST_REQUIRE(!ec);
 }
 
-BOOST_AUTO_TEST_CASE(rpc_body_writer__get__null_response_non_terminated__success_expected_no_more)
+BOOST_AUTO_TEST_CASE(rpc_body_writer__get__null_response_non_terminated__success_expected_more)
 {
-    const std::string_view expected{ R"({"error":null})" };
+    const std::string_view expected{ R"({"error":null,"result":null})" };
     const asio::const_buffer out{ expected.data(), expected.size() };
-    rpc::body::value_type body{};
+    rpc::response_body::value_type body{};
     response_header header{};
-    rpc::body::writer writer(header, body);
+    rpc::response_body::writer writer(header, body);
     boost_code ec{};
     writer.init(ec);
     BOOST_REQUIRE(!ec);
@@ -77,17 +77,17 @@ BOOST_AUTO_TEST_CASE(rpc_body_writer__get__null_response_non_terminated__success
     BOOST_REQUIRE(!ec);
     BOOST_REQUIRE(buffer.has_value());
     BOOST_REQUIRE(buffer.get().first == out);
-    BOOST_REQUIRE(!buffer.get().second);
+    BOOST_REQUIRE(buffer.get().second);
 }
 
-BOOST_AUTO_TEST_CASE(rpc_body_writer__get__simple_response_non_terminated__success_expected_no_more)
+BOOST_AUTO_TEST_CASE(rpc_body_writer__get__simple_response_non_terminated__success_expected_more)
 {
     const std::string_view expected{ R"({"jsonrpc":"2.0","id":1,"result":true})" };
     const asio::const_buffer out{ expected.data(), expected.size() };
-    rpc::body::value_type body{};
-    body.response = response_t{ version::v2, identity_t{ 1 }, {}, value_t{ true } };
+    rpc::response_body::value_type body{};
+    body.message = response_t{ version::v2, identity_t{ 1 }, {}, value_t{ true } };
     response_header header{};
-    rpc::body::writer writer(header, body);
+    rpc::response_body::writer writer(header, body);
     boost_code ec{};
     writer.init(ec);
     BOOST_REQUIRE(!ec);
@@ -96,16 +96,16 @@ BOOST_AUTO_TEST_CASE(rpc_body_writer__get__simple_response_non_terminated__succe
     BOOST_REQUIRE(!ec);
     BOOST_REQUIRE(buffer.has_value());
     BOOST_REQUIRE(buffer.get().first == out);
-    BOOST_REQUIRE(!buffer.get().second);
+    BOOST_REQUIRE(buffer.get().second);
 }
 
 BOOST_AUTO_TEST_CASE(rpc_body_writer__get__simple_response_terminated__success_expected_with_newline_no_more)
 {
     const std::string_view expected_json{ R"({"jsonrpc":"2.0","id":1,"result":true})" };
     const std::string_view expected_newline{ "\n" };
-    rpc::body::value_type body{};
-    body.response = response_t{ version::v2, identity_t{ 1 }, {}, value_t{ true } };
-    rpc::body::writer writer(body);
+    rpc::response_body::value_type body{};
+    body.message = response_t{ version::v2, identity_t{ 1 }, {}, value_t{ true } };
+    rpc::response_body::writer writer(body);
     boost_code ec{};
     writer.init(ec);
     BOOST_REQUIRE(!ec);
@@ -130,4 +130,4 @@ BOOST_AUTO_TEST_CASE(rpc_body_writer__get__simple_response_terminated__success_e
 
 BOOST_AUTO_TEST_SUITE_END()
 
-#endif // HAVE_SLOW_TESTS
+////#endif // HAVE_SLOW_TESTS
