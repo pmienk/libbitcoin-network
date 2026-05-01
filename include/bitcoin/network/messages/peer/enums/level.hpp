@@ -171,11 +171,14 @@ enum level: uint32_t
     /// send_address_v2
     bip155 = 70016,
 
-    /// wtxidrelay
-    bip339 = 70016,
-
     /// erlay [not supported]
     bip330 = 70016,
+
+    /// pkgtxns (requires wtxidrelay)
+    bip331 = 70016,
+
+    /// wtxidrelay
+    bip339 = 70016,
 
     /// -----------------------------------------------------------------------
 
