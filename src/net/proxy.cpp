@@ -271,8 +271,20 @@ void proxy::ws_read(http::flat_buffer& out, count_handler&& handler) NOEXCEPT
 void proxy::ws_write(const asio::const_buffer& in, bool binary,
     count_handler&& handler) NOEXCEPT
 {
-    // TODO: compose (potentially full duplex).
-    socket_->ws_write(in, binary, std::move(handler));
+    writer call = std::bind(&proxy::do_ws_write,
+        shared_from_this(), in, binary, std::move(handler));
+
+    boost::asio::dispatch(strand(),
+        std::bind(&proxy::do_write,
+            shared_from_this(), std::move(call)));
+}
+
+void proxy::do_ws_write(const asio::const_buffer& in, bool binary,
+    const count_handler& handler) NOEXCEPT
+{
+    socket_->ws_write(in, binary,
+        std::bind(&proxy::handle_write,
+            shared_from_this(), _1, _2, handler));
 }
 
 // HTTP (generic/rpc).
