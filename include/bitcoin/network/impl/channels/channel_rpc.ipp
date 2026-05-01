@@ -170,10 +170,10 @@ inline rpc::message_ptr<Message> CLASS::assign_message(Message&& message,
     size_t size_hint) NOEXCEPT
 {
     BC_ASSERT(stranded());
-    response_buffer_->max_size(size_hint);
     const auto ptr = system::to_shared<rpc::message_value<Message>>();
     ptr->message = std::move(message);
     ptr->buffer = response_buffer_;
+    ptr->size_hint = size_hint;
     return ptr;
 }
 

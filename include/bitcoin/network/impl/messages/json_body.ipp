@@ -133,15 +133,20 @@ TEMPLATE
 void CLASS::writer::init(boost_code& ec) NOEXCEPT
 {
     using namespace system;
+    const auto size = is_zero(value_.size_hint) ? default_buffer :
+        value_.size_hint;
+
+    // Reuse is unsafe except for half duplex.
     if (!value_.buffer)
     {
-        // Caller controls max_size and other buffer behavior by assigning it.
-        value_.buffer = emplace_shared<http::flat_buffer>(default_buffer);
+        // Caller controls buffer lifetime by assigning it (less allocation).
+        value_.buffer = emplace_shared<http::flat_buffer>(size);
     }
     else
     {
         // Caller has assigned the buffer (or just reused the response).
         value_.buffer->consume(value_.buffer->size());
+        value_.buffer->max_size(size);
     }
 
     ec.clear();
