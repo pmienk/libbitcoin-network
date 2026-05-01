@@ -340,6 +340,7 @@ void proxy::handle_write(const code& ec, size_t bytes,
     if (queue_.empty())
         return;
 
+    handler(ec, bytes);
     queue_.pop_front();
     total_ = ceilinged_add(total_.load(), bytes);
     ////LOGV("Dequeue write for [" << endpoint() << "]: " << queue_.size()
@@ -347,7 +348,6 @@ void proxy::handle_write(const code& ec, size_t bytes,
 
     // All handlers must be invoked unless stopped, so continue despite code.
     write();
-    handler(ec, bytes);
 }
 
 // Properties.

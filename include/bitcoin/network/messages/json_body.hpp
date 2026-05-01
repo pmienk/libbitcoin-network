@@ -39,7 +39,7 @@ struct json_value
     /// Used by channel to resize reusable buffer.
     size_t size_hint{};
 
-    /// Writer serialization buffer (max size, allocated on write).
+    /// Writer serialization buffer (allocated on write if not assigned).
     mutable http::flat_buffer_ptr buffer{};
 };
 

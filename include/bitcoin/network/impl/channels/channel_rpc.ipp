@@ -172,7 +172,6 @@ inline rpc::message_ptr<Message> CLASS::assign_message(Message&& message,
     BC_ASSERT(stranded());
     const auto ptr = system::to_shared<rpc::message_value<Message>>();
     ptr->message = std::move(message);
-    ptr->buffer = response_buffer_;
     ptr->size_hint = size_hint;
     return ptr;
 }
