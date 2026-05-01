@@ -85,15 +85,15 @@ void socket::handle_ws_read(const boost_code& ec, size_t size,
 // WS Write.
 // ----------------------------------------------------------------------------
 
-void socket::ws_write(const asio::const_buffer& in, bool raw,
+void socket::ws_write(const asio::const_buffer& in, bool binary,
     count_handler&& handler) NOEXCEPT
 {
     boost::asio::dispatch(strand_,
         std::bind(&socket::do_ws_write,
-            shared_from_this(), in, raw, std::move(handler)));
+            shared_from_this(), in, binary, std::move(handler)));
 }
 
-void socket::do_ws_write(const asio::const_buffer& in, bool raw,
+void socket::do_ws_write(const asio::const_buffer& in, bool binary,
     const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
@@ -101,7 +101,7 @@ void socket::do_ws_write(const asio::const_buffer& in, bool raw,
 
     try
     {
-        if (raw)
+        if (binary)
         {
             VARIANT_DISPATCH_METHOD(get_ws(), binary(true));
         }
