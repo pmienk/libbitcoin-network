@@ -130,7 +130,6 @@ protected:
         count_handler&& handler) NOEXCEPT;
 
     /// Send a complete TCP message to the remote endpoint.
-    /// Handler may not be invoked in the case of a stopped channel.
     virtual void write(const asio::const_buffer& buffer,
         count_handler&& handler) NOEXCEPT;
 
@@ -142,12 +141,10 @@ protected:
         count_handler&& handler) NOEXCEPT;
 
     /// Write rpc response to the socket (json buffer in body).
-    /// Handler may not be invoked in the case of a stopped channel.
     virtual void write(rpc::response& response,
         count_handler&& handler) NOEXCEPT;
 
     /// Write rpc notification (request) to the socket (json buffer in body).
-    /// Handler may not be invoked in the case of a stopped channel.
     virtual void write(rpc::request& notification,
         count_handler&& handler) NOEXCEPT;
 
@@ -159,7 +156,6 @@ protected:
         count_handler&& handler) NOEXCEPT;
 
     /// Write full buffer to the websocket (post-upgrade), specify binary/text.
-    /// Handler may not be invoked in the case of a stopped channel.
     virtual void ws_write(const asio::const_buffer& in, bool binary,
         count_handler&& handler) NOEXCEPT;
 
@@ -183,6 +179,8 @@ private:
     void do_rpc_write_response(const ref<rpc::response>& response,
         const count_handler& handler) NOEXCEPT;
     void do_rpc_write_notification(const ref<rpc::request>& notification,
+        const count_handler& handler) NOEXCEPT;
+    void do_ws_write(const asio::const_buffer& in, bool binary,
         const count_handler& handler) NOEXCEPT;
     void do_subscribe_stop(const result_handler& handler,
         const result_handler& complete) NOEXCEPT;

@@ -307,7 +307,7 @@ void proxy::do_write(const writer& call) NOEXCEPT
 
     if (stopped())
     {
-        // Does not queue new work after stop.
+        // Does not queue new work or invoke handler after stop.
         LOGQ("Payload write abort [" << endpoint() << "]");
         return;
     }
