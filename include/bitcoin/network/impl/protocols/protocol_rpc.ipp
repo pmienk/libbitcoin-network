@@ -25,11 +25,15 @@
 namespace libbitcoin {
 namespace network {
 
+// These invoke channel::send<>, which invokes handle_send<> for continuation.
+// The handler-free methods just don't provide for a dedicated caller handler.
+// Notify methods are an exception, they do not invoke continuation (invalid).
+
 TEMPLATE
 inline void CLASS::send_code(const code& ec) NOEXCEPT
 {
     using namespace std::placeholders;
-    send_code(ec,std::bind(&CLASS::complete,
+    send_code(ec,std::bind(&CLASS::handle_send,
         shared_from_base<CLASS>(), _1));
 }
 
@@ -37,7 +41,7 @@ TEMPLATE
 inline void CLASS::send_error(rpc::result_t&& error) NOEXCEPT
 {
     using namespace std::placeholders;
-    send_error(std::move(error), std::bind(&CLASS::complete,
+    send_error(std::move(error), std::bind(&CLASS::handle_send,
         shared_from_base<CLASS>(), _1));
 }
 
@@ -45,8 +49,17 @@ TEMPLATE
 inline void CLASS::send_result(rpc::value_t&& result, size_t size_hint) NOEXCEPT
 {
     using namespace std::placeholders;
-    send_result(std::move(result), size_hint, std::bind(&CLASS::complete,
+    send_result(std::move(result), size_hint, std::bind(&CLASS::handle_send,
         shared_from_base<CLASS>(), _1));
+}
+
+TEMPLATE
+inline void CLASS::send_notification(rpc::string_t&& method,
+    rpc::params_t&& notification, size_t size_hint) NOEXCEPT
+{
+    channel_->send_notification(std::move(method), std::move(notification),
+        size_hint, std::bind(&CLASS::handle_send,
+            shared_from_base<CLASS>(), _1));
 }
 
 TEMPLATE

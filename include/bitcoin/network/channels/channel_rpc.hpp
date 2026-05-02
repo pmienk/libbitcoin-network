@@ -84,7 +84,6 @@ public:
         uint64_t identifier, const settings_t& settings,
         const options_t& options) NOEXCEPT
       : channel(log, socket, identifier, settings, options),
-        response_buffer_(system::to_shared<http::flat_buffer>()),
         request_buffer_(options.minimum_buffer)
     {
     }
@@ -140,7 +139,6 @@ private:
     // These are protected by strand.
     rpc::version version_;
     rpc::id_option identity_;
-    http::flat_buffer_ptr response_buffer_;
     http::flat_buffer request_buffer_;
     dispatcher dispatcher_{};
     bool reading_{};

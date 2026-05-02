@@ -53,6 +53,8 @@ protected:
     virtual inline void send_error(rpc::result_t&& error) NOEXCEPT;
     virtual inline void send_result(rpc::value_t&& result,
         size_t size_hint) NOEXCEPT;
+    virtual inline void send_notification(rpc::string_t&& method,
+        rpc::params_t&& notification, size_t size_hint) NOEXCEPT;
 
     /// Senders, rpc version and identity added to responses (requires strand).
     virtual inline void send_code(const code& ec,
@@ -64,9 +66,6 @@ protected:
     virtual inline void send_notification(rpc::string_t&& method, 
         rpc::params_t&& notification, size_t size_hint,
         result_handler&& handler) NOEXCEPT;
-
-    /// Default noop completion handler.
-    virtual inline void complete(const code&) NOEXCEPT {};
 
 private:
     // This is mostly thread safe, and used in a thread safe manner.

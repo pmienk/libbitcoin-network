@@ -196,7 +196,6 @@ void channel_http::assign_json_buffer(response& response) NOEXCEPT
         body.contains<json_body::value_type>())
     {
         auto& value = body.get<json_body::value_type>();
-        response_buffer_->max_size(value.size_hint);
         value.buffer = response_buffer_;
     }
 }

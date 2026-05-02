@@ -271,8 +271,20 @@ void proxy::ws_read(http::flat_buffer& out, count_handler&& handler) NOEXCEPT
 void proxy::ws_write(const asio::const_buffer& in, bool binary,
     count_handler&& handler) NOEXCEPT
 {
-    // TODO: compose (potentially full duplex).
-    socket_->ws_write(in, binary, std::move(handler));
+    writer call = std::bind(&proxy::do_ws_write,
+        shared_from_this(), in, binary, std::move(handler));
+
+    boost::asio::dispatch(strand(),
+        std::bind(&proxy::do_write,
+            shared_from_this(), std::move(call)));
+}
+
+void proxy::do_ws_write(const asio::const_buffer& in, bool binary,
+    const count_handler& handler) NOEXCEPT
+{
+    socket_->ws_write(in, binary,
+        std::bind(&proxy::handle_write,
+            shared_from_this(), _1, _2, handler));
 }
 
 // HTTP (generic/rpc).
@@ -307,7 +319,7 @@ void proxy::do_write(const writer& call) NOEXCEPT
 
     if (stopped())
     {
-        // Does not queue new work after stop.
+        // Does not queue new work or invoke handler after stop.
         LOGQ("Payload write abort [" << endpoint() << "]");
         return;
     }
@@ -340,6 +352,7 @@ void proxy::handle_write(const code& ec, size_t bytes,
     if (queue_.empty())
         return;
 
+    handler(ec, bytes);
     queue_.pop_front();
     total_ = ceilinged_add(total_.load(), bytes);
     ////LOGV("Dequeue write for [" << endpoint() << "]: " << queue_.size()
@@ -347,7 +360,6 @@ void proxy::handle_write(const code& ec, size_t bytes,
 
     // All handlers must be invoked unless stopped, so continue despite code.
     write();
-    handler(ec, bytes);
 }
 
 // Properties.

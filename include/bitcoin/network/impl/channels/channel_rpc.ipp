@@ -172,7 +172,6 @@ inline rpc::message_ptr<Message> CLASS::assign_message(Message&& message,
     BC_ASSERT(stranded());
     const auto ptr = system::to_shared<rpc::message_value<Message>>();
     ptr->message = std::move(message);
-    ptr->buffer = response_buffer_;
     ptr->size_hint = size_hint;
     return ptr;
 }
@@ -190,6 +189,7 @@ inline void CLASS::handle_send(const code& ec, size_t bytes,
     // Typically a noop, but handshake may pause channel here.
     handler(ec);
 
+    // Only invoke continuation for a request response (not notification).
     if constexpr (is_same_type<Message, rpc::response_t>)
     {
         LOGA("Rpc response: (" << bytes << ") bytes [" << endpoint() << "] "
