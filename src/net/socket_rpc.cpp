@@ -25,7 +25,7 @@
 
 namespace libbitcoin {
 namespace network {
-    
+
 using namespace system;
 using namespace network::rpc;
 using namespace std::placeholders;
@@ -35,10 +35,9 @@ BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
 BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
-/// RPC Read.
+// RPC (read).
 // ----------------------------------------------------------------------------
 
-// Buffer could be passed via request, so this is for interface consistency.
 void socket::rpc_read(http::flat_buffer& buffer, rpc::request& request,
     count_handler&& handler) NOEXCEPT
 {
@@ -51,8 +50,9 @@ void socket::rpc_read(http::flat_buffer& buffer, rpc::request& request,
             shared_from_this(), ec, zero, in, std::move(handler)));
 }
 
-void socket::do_rpc_read(boost_code ec, size_t total, const read_rpc::ptr& in,
-    const count_handler& handler) NOEXCEPT
+// private
+void socket::do_rpc_read(boost_code ec, size_t total,
+    const read_rpc::ptr& in, const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
     constexpr auto size = rpc::writer::default_buffer;
@@ -66,13 +66,12 @@ void socket::do_rpc_read(boost_code ec, size_t total, const read_rpc::ptr& in,
         return;
     }
 
-    // async_read_some allows variable sized or empty reads into fixed buffer.
-    VARIANT_DISPATCH_METHOD(get_tcp(),
-        async_read_some(in->buffer.prepare(size),
-            std::bind(&socket::handle_rpc_read,
-                shared_from_this(), _1, _2, total, in, handler)));
+    async_read_some(in->buffer.prepare(size),
+        std::bind(&socket::handle_rpc_read,
+            shared_from_this(), _1, _2, total, in, handler));
 }
 
+// private
 void socket::handle_rpc_read(boost_code ec, size_t size, size_t total,
     const read_rpc::ptr& in, const count_handler& handler) NOEXCEPT
 {
@@ -115,7 +114,7 @@ void socket::handle_rpc_read(boost_code ec, size_t size, size_t total,
     do_rpc_read(ec, total, in, handler);
 }
 
-/// RPC Write.
+// RPC (write).
 // ----------------------------------------------------------------------------
 
 void socket::rpc_write(rpc::response& response,
@@ -131,6 +130,7 @@ void socket::rpc_write(rpc::response& response,
             shared_from_this(), ec, zero, out, std::move(handler)));
 }
 
+// private
 void socket::do_rpc_write(boost_code ec, size_t total,
     const write_rpc::ptr& out, const count_handler& handler) NOEXCEPT
 {
@@ -148,14 +148,12 @@ void socket::do_rpc_write(boost_code ec, size_t total,
 
     BC_ASSERT(buffer.has_value());
 
-    // Internally this may compose multiple async_write_some to consume buffer.
-    // Writes one buffer from writer, must still iterator until writer is done.
-    VARIANT_DISPATCH_FUNCTION(boost::asio::async_write, get_tcp(),
-        buffer.value().first,
-            std::bind(&socket::handle_rpc_write,
-                shared_from_this(), _1, _2, total, out, handler));
+    async_write(buffer.value().first,
+        std::bind(&socket::handle_rpc_write,
+            shared_from_this(), _1, _2, total, out, handler));
 }
 
+// private
 void socket::handle_rpc_write(boost_code ec, size_t size, size_t total,
     const write_rpc::ptr& out, const count_handler& handler) NOEXCEPT
 {
@@ -178,9 +176,8 @@ void socket::handle_rpc_write(boost_code ec, size_t size, size_t total,
     do_rpc_write(ec, total, out, handler);
 }
 
-/// RPC Notify.
+/// Unified JSON-RPC (notify).
 // ----------------------------------------------------------------------------
-// This is identical to 'RPC Write' apart from request and notify_rpc types.
 
 void socket::rpc_notify(rpc::request& notification,
     count_handler&& handler) NOEXCEPT
@@ -195,6 +192,7 @@ void socket::rpc_notify(rpc::request& notification,
             shared_from_this(), ec, zero, out, std::move(handler)));
 }
 
+// private
 void socket::do_rpc_notify(boost_code ec, size_t total,
     const notify_rpc::ptr& out, const count_handler& handler) NOEXCEPT
 {
@@ -212,14 +210,12 @@ void socket::do_rpc_notify(boost_code ec, size_t total,
 
     BC_ASSERT(buffer.has_value());
 
-    // Internally this may compose multiple async_write_some to consume buffer.
-    // Writes one buffer from writer, must still iterator until writer is done.
-    VARIANT_DISPATCH_FUNCTION(boost::asio::async_write, get_tcp(),
-        buffer.value().first,
-            std::bind(&socket::handle_rpc_notify,
-                shared_from_this(), _1, _2, total, out, handler));
+    async_write(buffer.value().first,
+        std::bind(&socket::handle_rpc_notify,
+            shared_from_this(), _1, _2, total, out, handler));
 }
 
+// private
 void socket::handle_rpc_notify(boost_code ec, size_t size, size_t total,
     const notify_rpc::ptr& out, const count_handler& handler) NOEXCEPT
 {

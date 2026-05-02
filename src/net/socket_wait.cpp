@@ -39,6 +39,7 @@ void socket::wait(result_handler&& handler) NOEXCEPT
             shared_from_this(), std::move(handler)));
 }
 
+// private
 void socket::do_wait(const result_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
@@ -48,6 +49,7 @@ void socket::do_wait(const result_handler& handler) NOEXCEPT
             shared_from_this(), _1, handler));
 }
 
+// private
 void socket::handle_wait(const boost_code& ec,
     const result_handler& handler) NOEXCEPT
 {
@@ -77,6 +79,7 @@ void socket::cancel(result_handler&& handler) NOEXCEPT
             shared_from_this(), std::move(handler)));
 }
 
+// private
 void socket::do_cancel(const result_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());

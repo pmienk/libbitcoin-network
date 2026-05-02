@@ -49,6 +49,7 @@ void socket::stop() NOEXCEPT
         std::bind(&socket::do_stop, shared_from_this()));
 }
 
+// private
 void socket::do_stop() NOEXCEPT
 {
     BC_ASSERT(stranded());
@@ -82,6 +83,7 @@ void socket::lazy_stop() NOEXCEPT
         std::bind(&socket::do_ws_stop, shared_from_this()));
 }
 
+// private
 void socket::do_ws_stop() NOEXCEPT
 {
     BC_ASSERT(stranded());
@@ -97,6 +99,7 @@ void socket::do_ws_stop() NOEXCEPT
                 shared_from_this(), _1)));
 }
 
+// private
 void socket::handle_ws_close(const boost_code& ec) NOEXCEPT
 {
     BC_ASSERT(stranded());
@@ -106,6 +109,7 @@ void socket::handle_ws_close(const boost_code& ec) NOEXCEPT
     do_ssl_stop();
 }
 
+// private
 void socket::do_ssl_stop() NOEXCEPT
 {
     BC_ASSERT(stranded());
@@ -120,6 +124,7 @@ void socket::do_ssl_stop() NOEXCEPT
             shared_from_this(), _1));
 }
 
+// private
 void socket::handle_ssl_close(const boost_code& ec) NOEXCEPT
 {
     BC_ASSERT(stranded());

@@ -101,7 +101,7 @@ protected:
     void stopping(const code& ec) NOEXCEPT override;
 
     /// Stranded notifier, allows timer reset.
-    void waiting() NOEXCEPT override;
+    void reading() NOEXCEPT override;
 
 private:
     void stop_expiration() NOEXCEPT;

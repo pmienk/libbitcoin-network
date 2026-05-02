@@ -39,7 +39,7 @@ BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
 BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
-// HTTP Read.
+// HTTP (read).
 // ----------------------------------------------------------------------------
 
 void socket::http_read(http::flat_buffer& buffer,
@@ -50,6 +50,7 @@ void socket::http_read(http::flat_buffer& buffer,
             std::ref(buffer), std::ref(request), std::move(handler)));
 }
 
+// private
 void socket::do_http_read(ref<http::flat_buffer> buffer,
     const ref<http::request>& request,
     const count_handler& handler) NOEXCEPT
@@ -85,6 +86,7 @@ void socket::do_http_read(ref<http::flat_buffer> buffer,
     }
 }
 
+// private
 void socket::handle_http_read(const boost_code& ec, size_t size,
     const ref<http::request>& request, const http_parser_ptr& parser,
     const count_handler& handler) NOEXCEPT
@@ -113,7 +115,7 @@ void socket::handle_http_read(const boost_code& ec, size_t size,
     handler(code, size);
 }
 
-// HTTP Write.
+// HTTP (write).
 // ----------------------------------------------------------------------------
 
 void socket::http_write(http::response& response,
@@ -124,6 +126,7 @@ void socket::http_write(http::response& response,
             std::ref(response), std::move(handler)));
 }
 
+// private
 void socket::do_http_write(const ref<http::response>& response,
     const count_handler& handler) NOEXCEPT
 {
@@ -149,6 +152,7 @@ void socket::do_http_write(const ref<http::response>& response,
     }
 }
 
+// private
 void socket::handle_http_write(const boost_code& ec, size_t size,
     const count_handler& handler) NOEXCEPT
 {

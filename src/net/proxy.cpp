@@ -18,25 +18,15 @@
  */
 #include <bitcoin/network/net/proxy.hpp>
 
-#include <algorithm>
 #include <utility>
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
-#include <bitcoin/network/memory.hpp>
-#include <bitcoin/network/messages/messages.hpp>
 #include <bitcoin/network/net/socket.hpp>
 
 namespace libbitcoin {
 namespace network {
 
-// Bind throws (ok).
-// Shared pointers required in handler parameters so closures control lifetime.
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
-BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
-
-using namespace system;
-using namespace std::placeholders;
 
 // This is created in a started state and must be stopped, as the subscribers
 // assert if not stopped. Subscribers may hold protocols even if the service
@@ -51,34 +41,6 @@ proxy::~proxy() NOEXCEPT
 {
     BC_ASSERT_MSG(stopped(), "proxy is not stopped");
     if (!stopped()) { LOGF("~proxy is not stopped."); }
-}
-
-// Pause (proxy is created paused).
-// ----------------------------------------------------------------------------
-// public
-
-void proxy::pause() NOEXCEPT
-{
-    BC_ASSERT(stranded());
-    paused_ = true;
-}
-
-void proxy::resume() NOEXCEPT
-{
-    BC_ASSERT(stranded());
-    paused_ = false;
-}
-
-bool proxy::paused() const NOEXCEPT
-{
-    BC_ASSERT(stranded());
-    return paused_;
-}
-
-// protected
-// override to update timers.
-void proxy::waiting() NOEXCEPT
-{
 }
 
 // Stop (socket/proxy started upon create).
@@ -165,201 +127,42 @@ void proxy::do_subscribe_stop(const result_handler& handler,
     complete(error::success);
 }
 
-// Wait (all).
+// Pause (proxy is created paused).
 // ----------------------------------------------------------------------------
+// public
 
-void proxy::wait(result_handler&& handler) NOEXCEPT
-{
-    socket_->wait(std::move(handler));
-}
-
-void proxy::cancel(result_handler&& handler) NOEXCEPT
-{
-    socket_->cancel(std::move(handler));
-}
-
-// TCP (generic tcp, p2p).
-// ----------------------------------------------------------------------------
-
-void proxy::read(const asio::mutable_buffer& buffer,
-    count_handler&& handler) NOEXCEPT
-{
-    boost::asio::dispatch(strand(),
-        std::bind(&proxy::waiting, shared_from_this()));
-
-    socket_->tcp_read(buffer, std::move(handler));
-}
-
-void proxy::write(const asio::const_buffer& buffer,
-    count_handler&& handler) NOEXCEPT
-{
-    writer call = std::bind(&proxy::do_tcp_write,
-        shared_from_this(), buffer, std::move(handler));
-
-    boost::asio::dispatch(strand(),
-        std::bind(&proxy::do_write,
-            shared_from_this(), std::move(call)));
-}
-
-// private
-void proxy::do_tcp_write(const asio::const_buffer& buffer,
-    const count_handler& handler) NOEXCEPT
-{
-    socket_->tcp_write({ buffer.data(), buffer.size() },
-        std::bind(&proxy::handle_write,
-            shared_from_this(), _1, _2, handler));
-}
-
-// RPC (over tcp, electrum/stratum_v1).
-// ----------------------------------------------------------------------------
-
-void proxy::read(http::flat_buffer& buffer, rpc::request& request,
-    count_handler&& handler) NOEXCEPT
-{
-    boost::asio::dispatch(strand(),
-        std::bind(&proxy::waiting, shared_from_this()));
-
-    socket_->rpc_read(buffer, request, std::move(handler));
-}
-
-void proxy::write(rpc::response& response, count_handler&& handler) NOEXCEPT
-{
-    writer call = std::bind(&proxy::do_rpc_write_response,
-        shared_from_this(), std::ref(response), std::move(handler));
-
-    boost::asio::dispatch(strand(),
-        std::bind(&proxy::do_write,
-            shared_from_this(), std::move(call)));
-}
-
-void proxy::write(rpc::request& notification, count_handler&& handler) NOEXCEPT
-{
-    writer call = std::bind(&proxy::do_rpc_write_notification,
-        shared_from_this(), std::ref(notification), std::move(handler));
-
-    boost::asio::dispatch(strand(),
-        std::bind(&proxy::do_write,
-            shared_from_this(), std::move(call)));
-}
-
-// private
-void proxy::do_rpc_write_response(const ref<rpc::response>& response,
-    const count_handler& handler) NOEXCEPT
-{
-    socket_->rpc_write(response.get(),
-        std::bind(&proxy::handle_write,
-            shared_from_this(), _1, _2, handler));
-}
-
-// private
-void proxy::do_rpc_write_notification(const ref<rpc::request>& notification,
-    const count_handler& handler) NOEXCEPT
-{
-    socket_->rpc_notify(notification.get(),
-        std::bind(&proxy::handle_write,
-            shared_from_this(), _1, _2, handler));
-}
-
-// WS (generic).
-// ----------------------------------------------------------------------------
-
-void proxy::ws_read(http::flat_buffer& out, count_handler&& handler) NOEXCEPT
-{
-    socket_->ws_read(out, std::move(handler));
-}
-
-void proxy::ws_write(const asio::const_buffer& in, bool binary,
-    count_handler&& handler) NOEXCEPT
-{
-    writer call = std::bind(&proxy::do_ws_write,
-        shared_from_this(), in, binary, std::move(handler));
-
-    boost::asio::dispatch(strand(),
-        std::bind(&proxy::do_write,
-            shared_from_this(), std::move(call)));
-}
-
-void proxy::do_ws_write(const asio::const_buffer& in, bool binary,
-    const count_handler& handler) NOEXCEPT
-{
-    socket_->ws_write(in, binary,
-        std::bind(&proxy::handle_write,
-            shared_from_this(), _1, _2, handler));
-}
-
-// HTTP (generic/rpc).
-// ----------------------------------------------------------------------------
-
-// Method waiting() is invoked directly if read() is called from strand().
-void proxy::read(http::flat_buffer& buffer, http::request& request,
-    count_handler&& handler) NOEXCEPT
-{
-    boost::asio::dispatch(strand(),
-        std::bind(&proxy::waiting, shared_from_this()));
-
-    socket_->http_read(buffer, request, std::move(handler));
-}
-
-// Writes are composed but http is half duplex so there is no interleave risk.
-void proxy::write(http::response& response,
-    count_handler&& handler) NOEXCEPT
-{
-    socket_->http_write(response, std::move(handler));
-}
-
-// Send cycle (send continues until queue is empty).
-// ----------------------------------------------------------------------------
-// stackoverflow.com/questions/7754695/boost-asio-async-write-how-to-not-
-// interleaving-async-write-calls
-
-// private
-void proxy::do_write(const writer& call) NOEXCEPT
+void proxy::pause() NOEXCEPT
 {
     BC_ASSERT(stranded());
+    paused_ = true;
+}
 
-    if (stopped())
-    {
-        // Does not queue new work or invoke handler after stop.
-        LOGQ("Payload write abort [" << endpoint() << "]");
-        return;
-    }
+void proxy::resume() NOEXCEPT
+{
+    BC_ASSERT(stranded());
+    paused_ = false;
+}
 
-    const auto started = !queue_.empty();
-    queue_.push_back(call);
-    ////LOGV("Enqueue write for [" << endpoint() << "]: " << queue_.size());
+bool proxy::paused() const NOEXCEPT
+{
+    BC_ASSERT(stranded());
+    return paused_;
+}
 
-    // Start the asynchronous loop if it wasn't already started.
-    if (!started)
-        write();
+// Signal activity.
+// ----------------------------------------------------------------------------
+// override reading() to update timers.
+
+// protected
+void proxy::reading() NOEXCEPT
+{
 }
 
 // private
-void proxy::write() NOEXCEPT
+void proxy::do_reading() NOEXCEPT
 {
-    BC_ASSERT(stranded());
-    if (queue_.empty())
-        return;
-
-    // Invokes oldest writer on the queue, completion invokes handle_write.
-    queue_.front()();
-}
-
-// private
-void proxy::handle_write(const code& ec, size_t bytes,
-    const count_handler& handler) NOEXCEPT
-{
-    BC_ASSERT(stranded());
-    if (queue_.empty())
-        return;
-
-    handler(ec, bytes);
-    queue_.pop_front();
-    total_ = ceilinged_add(total_.load(), bytes);
-    ////LOGV("Dequeue write for [" << endpoint() << "]: " << queue_.size()
-    ////    << " (" << total_.load() << " channel sent)");
-
-    // All handlers must be invoked unless stopped, so continue despite code.
-    write();
+    boost::asio::dispatch(strand(),
+        std::bind(&proxy::reading, shared_from_this()));
 }
 
 // Properties.
@@ -405,8 +208,6 @@ const config::endpoint& proxy::endpoint() const NOEXCEPT
     return socket_->endpoint();
 }
 
-BC_POP_WARNING()
-BC_POP_WARNING()
 BC_POP_WARNING()
 
 } // namespace network

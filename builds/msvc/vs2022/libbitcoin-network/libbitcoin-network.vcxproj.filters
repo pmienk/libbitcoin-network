@@ -381,6 +381,12 @@
     <ClCompile Include="..\..\..\..\src\net\proxy.cpp">
       <Filter>src\net</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\src\net\proxy_actions.cpp">
+      <Filter>src\net</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\net\proxy_queue.cpp">
+      <Filter>src\net</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\src\net\socket.cpp">
       <Filter>src\net</Filter>
     </ClCompile>
@@ -390,13 +396,13 @@
     <ClCompile Include="..\..\..\..\src\net\socket_http.cpp">
       <Filter>src\net</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\net\socket_p2p.cpp">
-      <Filter>src\net</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\src\net\socket_rpc.cpp">
       <Filter>src\net</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\net\socket_stop.cpp">
+      <Filter>src\net</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\net\socket_tcp.cpp">
       <Filter>src\net</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\net\socket_wait.cpp">

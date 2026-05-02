@@ -105,7 +105,7 @@ protected:
     proxy(const socket::ptr& socket) NOEXCEPT;
 
     /// Stranded event, allows timer reset.
-    virtual void waiting() NOEXCEPT;
+    virtual void reading() NOEXCEPT;
 
     /// Stranded handler invoked from stop().
     virtual void stopping(const code& ec) NOEXCEPT;
@@ -122,7 +122,7 @@ protected:
     /// Cancel wait or any asynchronous read/write operation, handlers posted.
     virtual void cancel(result_handler&& handler) NOEXCEPT;
 
-    /// TCP (generic tcp, p2p).
+    /// TCP (generic, p2p).
     /// -----------------------------------------------------------------------
 
     /// Read fixed-size TCP message from the remote endpoint into buffer.
@@ -133,7 +133,18 @@ protected:
     virtual void write(const asio::const_buffer& buffer,
         count_handler&& handler) NOEXCEPT;
 
-    /// RPC (over tcp, electrum/stratum_v1).
+    /// WS (generic).
+    /// -----------------------------------------------------------------------
+
+    /// Read full buffer from the websocket (post-upgrade).
+    virtual void ws_read(http::flat_buffer& out,
+        count_handler&& handler) NOEXCEPT;
+
+    /// Write full buffer to the websocket (post-upgrade), specify binary/text.
+    virtual void ws_write(const asio::const_buffer& in, bool binary,
+        count_handler&& handler) NOEXCEPT;
+
+    /// RPC (TCP: electrum/stratum_v1, WS: btcd).
     /// -----------------------------------------------------------------------
 
     /// Read rpc request from the socket, using provided buffer.
@@ -146,17 +157,6 @@ protected:
 
     /// Write rpc notification (request) to the socket (json buffer in body).
     virtual void write(rpc::request& notification,
-        count_handler&& handler) NOEXCEPT;
-
-    /// WS (generic).
-    /// -----------------------------------------------------------------------
-
-    /// Read full buffer from the websocket (post-upgrade).
-    virtual void ws_read(http::flat_buffer& out,
-        count_handler&& handler) NOEXCEPT;
-
-    /// Write full buffer to the websocket (post-upgrade), specify binary/text.
-    virtual void ws_write(const asio::const_buffer& in, bool binary,
         count_handler&& handler) NOEXCEPT;
 
     /// HTTP (generic/rpc).
@@ -174,13 +174,14 @@ private:
     typedef std::function<void()> writer;
     typedef std::deque<writer> queue;
 
+    // For write buffering.
     void do_tcp_write(const asio::const_buffer& payload,
+        const count_handler& handler) NOEXCEPT;
+    void do_ws_write(const asio::const_buffer& in, bool binary,
         const count_handler& handler) NOEXCEPT;
     void do_rpc_write_response(const ref<rpc::response>& response,
         const count_handler& handler) NOEXCEPT;
     void do_rpc_write_notification(const ref<rpc::request>& notification,
-        const count_handler& handler) NOEXCEPT;
-    void do_ws_write(const asio::const_buffer& in, bool binary,
         const count_handler& handler) NOEXCEPT;
     void do_subscribe_stop(const result_handler& handler,
         const result_handler& complete) NOEXCEPT;
@@ -190,6 +191,9 @@ private:
     void do_write(const writer& call) NOEXCEPT;
     void handle_write(const code& ec, size_t bytes,
         const count_handler& handler) NOEXCEPT;
+
+    // Invoke reading() on strand.
+    void do_reading() NOEXCEPT;
 
     // These are thread safe.
     std::atomic_bool paused_{ true };
