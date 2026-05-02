@@ -50,7 +50,7 @@ using json_t = boost::json::value;
 
 struct value_t
 {
-    /// 88 bytes (object_t).
+    /// 72 bytes (object_t, any_t).
     using inner_t = std::variant
     <
         /// json-rpc
