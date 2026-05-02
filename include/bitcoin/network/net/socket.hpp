@@ -110,26 +110,28 @@ public:
     virtual void connect(const asio::endpoints& range,
         result_handler&& handler) NOEXCEPT;
 
-    /// TCP (generic, p2p).
+    /// RAW (generic, variable size).
     /// -----------------------------------------------------------------------
 
-    /// Read full buffer from the socket, handler posted to socket strand.
-    virtual void tcp_read(const asio::mutable_buffer& out,
+    /// Read complete logical message for websockets (not for tcp).
+    /// Read available buffer from the socket, handler posted to socket strand.
+    virtual void raw_read(http::flat_buffer& out,
         count_handler&& handler) NOEXCEPT;
 
-    /// Write full buffer to the socket, handler posted to socket strand.
-    virtual void tcp_write(const asio::const_buffer& in,
-        count_handler&& handler) NOEXCEPT;
+    /// Binary or text mode applies to websockets (no-op for tcp).
+    /// Write the provided buffer to socket, handler posted to socket strand.
+    virtual void raw_write(const asio::const_buffer& in,
+        count_handler&& handler, bool binary=true) NOEXCEPT;
 
-    /// WS (generic).
+    /// P2P (generic, fixed size).
     /// -----------------------------------------------------------------------
 
-    /// Read full buffer from the websocket (post-upgrade).
-    virtual void ws_read(http::flat_buffer& out,
+    /// Read fixed buffer from the socket, handler posted to socket strand.
+    virtual void p2p_read(const asio::mutable_buffer& out,
         count_handler&& handler) NOEXCEPT;
 
-    /// Write full buffer to the websocket (post-upgrade), specify binary/text.
-    virtual void ws_write(const asio::const_buffer& in, bool binary,
+    /// Write the provided buffer to socket, handler posted to socket strand.
+    virtual void p2p_write(const asio::const_buffer& in,
         count_handler&& handler) NOEXCEPT;
 
     /// RPC (TCP: electrum/stratum_v1, WS: btcd).
@@ -219,10 +221,17 @@ protected:
     tcp_t get_tcp() NOEXCEPT;
     asio::socket& get_base() NOEXCEPT;
     asio::ssl::socket& get_ssl() NOEXCEPT;
+
+    /// Variant (ws vs. tcp) helpers (protected by strand).
+    /// -----------------------------------------------------------------------
+    void async_read(http::flat_buffer& buffer, const count_handler& handler,
+        size_t size=rpc::writer::default_buffer) NOEXCEPT;
+    void async_read(const asio::mutable_buffer& buffer,
+        const count_handler& handler) NOEXCEPT;
     void async_read_some(const asio::mutable_buffer& buffer,
-        count_handler&& handler) NOEXCEPT;
-    void async_write(const asio::const_buffer& buffer,
-        count_handler&& handler) NOEXCEPT;
+        const count_handler& handler) NOEXCEPT;
+    void async_write(const asio::const_buffer& buffer, bool binary,
+        const count_handler& handler) NOEXCEPT;
 
 private:
     using http_parser = boost::beast::http::request_parser<http::body>;
@@ -278,6 +287,9 @@ private:
     void do_ws_stop() NOEXCEPT;
     void do_ssl_stop() NOEXCEPT;
 
+    // config
+    void do_ws_event(ws::frame_type kind, const std::string& data) NOEXCEPT;
+
     // wait
     void do_wait(const result_handler& handler) NOEXCEPT;
     void do_cancel(const result_handler& handler) NOEXCEPT;
@@ -287,19 +299,15 @@ private:
         const result_handler& handler) NOEXCEPT;
     void do_handshake(const result_handler& handler) NOEXCEPT;
 
-    // tcp (generic)
-    void do_tcp_read(const asio::mutable_buffer& out,
+    // raw (tcp/ws)
+    void do_raw_read(ref<http::flat_buffer> out,
         const count_handler& handler) NOEXCEPT;
-    void do_tcp_write(const asio::const_buffer& in,
+    void do_raw_write(const asio::const_buffer& in, bool binary,
         const count_handler& handler) NOEXCEPT;
 
-    // ws (generic)
-    void do_ws_read(ref<http::flat_buffer> out,
+    // p2p (tcp/ws)
+    void do_p2p_read(const asio::mutable_buffer& out,
         const count_handler& handler) NOEXCEPT;
-    void do_ws_write(const asio::const_buffer& in, bool raw,
-        const count_handler& handler) NOEXCEPT;
-    void do_ws_event(ws::frame_type kind,
-        const std::string_view& data) NOEXCEPT;
 
     // rpc (tcp/ws)
     void do_rpc_read(boost_code ec, size_t total,
@@ -309,14 +317,12 @@ private:
     void do_rpc_notify(boost_code ec, size_t total,
         const notify_rpc::ptr& out, const count_handler& handler) NOEXCEPT;
 
-    // http (generic)
+    // http
     void do_http_read(ref<http::flat_buffer> buffer,
         const ref<http::request>& request,
         const count_handler& handler) NOEXCEPT;
     void do_http_write(const ref<http::response>& response,
         const count_handler& handler) NOEXCEPT;
-
-    code set_websocket(const http::request& request) NOEXCEPT;
 
     // handle
     // ------------------------------------------------------------------------
@@ -324,6 +330,10 @@ private:
     // stop (lazy)
     void handle_ws_close(const boost_code& ec) NOEXCEPT;
     void handle_ssl_close(const boost_code& ec) NOEXCEPT;
+
+    // config
+    void handle_ws_event(ws::frame_type kind,
+        const std::string& data) NOEXCEPT;
 
     // wait
     void handle_wait(const boost_code& ec,
@@ -337,8 +347,11 @@ private:
     void handle_handshake(const boost_code& ec,
         const result_handler& handler) NOEXCEPT;
 
-    // tcp (generic)
-    void handle_tcp(const boost_code& ec, size_t size,
+    // raw/p2p/read/write (tcp/ws)
+    void handle_async(const boost_code& ec, size_t size,
+        const count_handler& handler,const std::string& operation) NOEXCEPT;
+    void handle_async_read(const boost_code& ec, size_t size,
+        const asio::mutable_buffer& buffer, const http::flat_buffer_ptr& flat,
         const count_handler& handler) NOEXCEPT;
 
     // rpc (tcp/ws)
@@ -349,20 +362,17 @@ private:
     void handle_rpc_notify(boost_code ec, size_t size, size_t total,
         const notify_rpc::ptr& out, const count_handler& handler) NOEXCEPT;
 
-    // ws (generic)
-    void handle_ws(const boost_code& ec, size_t size,
-        const count_handler& handler) NOEXCEPT;
-    void handle_ws_event(ws::frame_type kind,
-        const std::string& data) NOEXCEPT;
-
     // http (generic/rpc)
     void handle_http_read(const boost_code& ec, size_t size,
-        const ref<http::request>& request,
-        const http_parser_ptr& parser, const count_handler& handler) NOEXCEPT;
+        const ref<http::request>& request, const http_parser_ptr& parser,
+        const count_handler& handler) NOEXCEPT;
     void handle_http_write(const boost_code& ec, size_t size,
         const count_handler& handler) NOEXCEPT;
 
-    // logging
+    // utility
+    // ------------------------------------------------------------------------
+
+    code set_websocket(const http::request& request) NOEXCEPT;
     void logx(const std::string& context, const boost_code& ec) const NOEXCEPT;
 
 protected:

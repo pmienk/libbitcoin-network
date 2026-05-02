@@ -122,26 +122,28 @@ protected:
     /// Cancel wait or any asynchronous read/write operation, handlers posted.
     virtual void cancel(result_handler&& handler) NOEXCEPT;
 
-    /// TCP (generic, p2p).
+    /// RAW (generic, variable size).
+    /// -----------------------------------------------------------------------
+
+    /// Read complete logical message for websockets (not for tcp).
+    /// Read available buffer from the socket, handler posted to socket strand.
+    virtual void read(http::flat_buffer& out,
+        count_handler&& handler) NOEXCEPT;
+
+    /// Binary or text mode applies to websockets (no-op for tcp).
+    /// Write the provided buffer to socket, handler posted to socket strand.
+    virtual void write(const asio::const_buffer& in,
+        count_handler&& handler, bool binary) NOEXCEPT;
+
+    ///  P2P (generic, fixed size).
     /// -----------------------------------------------------------------------
 
     /// Read fixed-size TCP message from the remote endpoint into buffer.
     virtual void read(const asio::mutable_buffer& buffer,
         count_handler&& handler) NOEXCEPT;
 
-    /// Send a complete TCP message to the remote endpoint.
+    /// Write the provided buffer to socket, handler posted to socket strand.
     virtual void write(const asio::const_buffer& buffer,
-        count_handler&& handler) NOEXCEPT;
-
-    /// WS (generic).
-    /// -----------------------------------------------------------------------
-
-    /// Read full buffer from the websocket (post-upgrade).
-    virtual void ws_read(http::flat_buffer& out,
-        count_handler&& handler) NOEXCEPT;
-
-    /// Write full buffer to the websocket (post-upgrade), specify binary/text.
-    virtual void ws_write(const asio::const_buffer& in, bool binary,
         count_handler&& handler) NOEXCEPT;
 
     /// RPC (TCP: electrum/stratum_v1, WS: btcd).
@@ -175,13 +177,13 @@ private:
     typedef std::deque<writer> queue;
 
     // For write buffering.
-    void do_tcp_write(const asio::const_buffer& payload,
+    void do_raw_write(const asio::const_buffer& payload, bool binary,
         const count_handler& handler) NOEXCEPT;
-    void do_ws_write(const asio::const_buffer& in, bool binary,
+    void do_p2p_write(const asio::const_buffer& payload,
         const count_handler& handler) NOEXCEPT;
-    void do_rpc_write_response(const ref<rpc::response>& response,
+    void do_response_write(const ref<rpc::response>& response,
         const count_handler& handler) NOEXCEPT;
-    void do_rpc_write_notification(const ref<rpc::request>& notification,
+    void do_notification_write(const ref<rpc::request>& notification,
         const count_handler& handler) NOEXCEPT;
     void do_subscribe_stop(const result_handler& handler,
         const result_handler& complete) NOEXCEPT;

@@ -18,6 +18,7 @@
  */
 #include <bitcoin/network/net/socket.hpp>
 
+#include <algorithm>
 #include <utility>
 #include <variant>
 #include <bitcoin/network/async/async.hpp>
@@ -37,7 +38,11 @@ namespace libbitcoin {
 namespace network {
 
 using namespace system;
+using namespace std::placeholders;
 
+// Shared pointers required in handler parameters so closures control lifetime.
+BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
+BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
 // Construct.
@@ -256,38 +261,164 @@ asio::ssl::socket& socket::get_ssl() NOEXCEPT
     }, socket_);
 }
 
-// Allows for full generalization between tcp and websockets.
-void socket::async_read_some(const asio::mutable_buffer& buffer,
-    count_handler&& handler) NOEXCEPT
-{
-    if (is_websocket())
-    {
-        VARIANT_DISPATCH_METHOD(get_ws(),
-            async_read_some(buffer, std::move(handler)));
-    }
-    else
-    {
-        VARIANT_DISPATCH_METHOD(get_tcp(),
-            async_read_some(buffer, std::move(handler)));
-    }
-}
+// Variant (ws vs. tcp)  helpers.
+// ----------------------------------------------------------------------------
+// protected
 
-// Allows for full generalization between tcp and websockets.
-void socket::async_write(const asio::const_buffer& buffer,
-    count_handler&& handler) NOEXCEPT
+void socket::async_write(const asio::const_buffer& buffer, bool binary,
+    const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
 
-    if (is_websocket())
+    try
     {
-        VARIANT_DISPATCH_METHOD(get_ws(),
-            async_write(buffer, std::move(handler)));
+        if (is_websocket())
+        {
+            VARIANT_DISPATCH_METHOD(get_ws(), binary(binary));
+            VARIANT_DISPATCH_METHOD(get_ws(),
+                async_write(buffer, std::bind(&socket::handle_async,
+                    shared_from_this(), _1, _2, handler, "async_write")));
+        }
+        else
+        {
+            VARIANT_DISPATCH_FUNCTION(boost::asio::async_write, get_tcp(),
+                buffer, std::bind(&socket::handle_async,
+                    shared_from_this(), _1, _2, handler, "async_write"));
+        }
     }
-    else
+    catch (const std::exception& e)
     {
-        VARIANT_DISPATCH_FUNCTION(boost::asio::async_write, get_tcp(),
-            buffer, std::move(handler));
+        LOGF("Exception @ async_write: " << e.what());
+        handler(error::operation_failed, {});
     }
+}
+
+
+void socket::async_read_some(const asio::mutable_buffer& buffer,
+    const count_handler& handler) NOEXCEPT
+{
+    try
+    {
+        if (is_websocket())
+        {
+            VARIANT_DISPATCH_METHOD(get_ws(),
+                async_read_some(buffer, std::bind(&socket::handle_async,
+                    shared_from_this(), _1, _2, handler, "async_read_some")));
+        }
+        else
+        {
+            VARIANT_DISPATCH_METHOD(get_tcp(),
+                async_read_some(buffer, std::bind(&socket::handle_async,
+                    shared_from_this(), _1, _2, handler, "async_read_some")));
+        }
+    }
+    catch (const std::exception& e)
+    {
+        LOGF("Exception @ async_read_some: " << e.what());
+        handler(error::operation_failed, {});
+    }
+}
+
+// raw
+void socket::async_read(http::flat_buffer& buffer,
+    const count_handler& handler, size_t size) NOEXCEPT
+{
+    try
+    {
+        if (is_websocket())
+        {
+            buffer.consume(buffer.size());
+
+            // Complete logical message semantics.
+            VARIANT_DISPATCH_METHOD(get_ws(),
+                async_read(buffer, std::bind(&socket::handle_async,
+                    shared_from_this(), _1, _2, handler, "async_read_raw")));
+        }
+        else
+        {
+            // Any available data semantics (ok).
+            async_read_some(buffer.prepare(size), handler);
+        }
+    }
+    catch (const std::exception& e)
+    {
+        LOGF("Exception @ async_read_raw: " << e.what());
+        handler(error::operation_failed, {});
+    }
+}
+
+// fixed/p2p
+void socket::async_read(const asio::mutable_buffer& buffer,
+    const count_handler& handler) NOEXCEPT
+{
+    try
+    {
+        if (is_websocket())
+        {
+            const auto flat = std::make_shared<http::flat_buffer>();
+            count_handler complete = std::bind(&socket::handle_async_read,
+                shared_from_this(), _1, _2, buffer, flat, handler);
+
+            // Websocket doesn't have fixed-size reads, so simulate it.
+            async_read(*flat, std::move(complete));
+        }
+        else
+        {
+            // Fixed-size semantics.
+            VARIANT_DISPATCH_FUNCTION(boost::asio::async_read, get_tcp(),
+                buffer, std::bind(&socket::handle_async,
+                    shared_from_this(), _1, _2, handler, "async_read_fixed"));
+        }
+    }
+    catch (const std::exception& e)
+    {
+        LOGF("Exception @ async_read_fixed: " << e.what());
+        handler(error::operation_failed, {});
+    }
+}
+
+// private
+void socket::handle_async_read(const boost_code& ec, size_t size,
+    const asio::mutable_buffer& buffer, const http::flat_buffer_ptr& flat,
+    const count_handler& handler) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    if (ec)
+    {
+        handler(error::ws_to_error_code(ec), size);
+        return;
+    }
+
+    if (size != buffer.size())
+    {
+        handler(error::bad_size, size);
+        return;
+    }
+
+    std::memcpy(buffer.data(), flat->data().data(), size);
+    handler(error::success, size);
+}
+
+// private
+void socket::handle_async(const boost_code& ec, size_t size,
+    const count_handler& handler, const std::string& operation) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    if (error::asio_is_canceled(ec))
+    {
+        handler(error::channel_stopped, size);
+        return;
+    }
+
+    const auto code = is_websocket() ? error::ws_to_error_code(ec) :
+        error::asio_to_error_code(ec);
+
+    if (code == error::unknown)
+        logx(operation, ec);
+
+    handler(code, size);
 }
 
 // Logging.
@@ -301,6 +432,8 @@ void socket::logx(const std::string& context,
         << ec.category().name() << " : " << ec.message());
 }
 
+BC_POP_WARNING()
+BC_POP_WARNING()
 BC_POP_WARNING()
 
 } // namespace network
