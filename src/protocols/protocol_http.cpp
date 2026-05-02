@@ -324,6 +324,7 @@ void protocol_http::send_ok(const request& request) NOEXCEPT
 // Handle sends.
 // ----------------------------------------------------------------------------
 
+// TODO: Move channel restart logic into channel and forward from here.
 void protocol_http::handle_complete(const code& ec,
     const code& reason) NOEXCEPT
 {
