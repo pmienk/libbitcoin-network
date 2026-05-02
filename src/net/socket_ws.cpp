@@ -57,7 +57,7 @@ void socket::do_ws_read(ref<http::flat_buffer> out,
     try
     {
         VARIANT_DISPATCH_METHOD(get_ws(),
-            async_read(out.get(), std::bind(&socket::handle_ws_read,
+            async_read(out.get(), std::bind(&socket::handle_ws,
                 shared_from_this(), _1, _2, handler)));
     }
     catch (const std::exception& e)
@@ -65,23 +65,6 @@ void socket::do_ws_read(ref<http::flat_buffer> out,
         LOGF("Exception @ do_ws_read: " << e.what());
         handler(error::operation_failed, {});
     }
-}
-
-// private
-void socket::handle_ws_read(const boost_code& ec, size_t size,
-    const count_handler& handler) NOEXCEPT
-{
-    BC_ASSERT(stranded());
-
-    if (error::asio_is_canceled(ec))
-    {
-        handler(error::channel_stopped, size);
-        return;
-    }
-
-    const auto code = error::ws_to_error_code(ec);
-    if (code == error::unknown) logx("ws-read", ec);
-    handler(code, size);
 }
 
 // WS (write).
@@ -114,7 +97,7 @@ void socket::do_ws_write(const asio::const_buffer& in, bool binary,
         }
 
         VARIANT_DISPATCH_METHOD(get_ws(),
-            async_write(in, std::bind(&socket::handle_ws_write,
+            async_write(in, std::bind(&socket::handle_ws,
                 shared_from_this(), _1, _2, handler)));
     }
     catch (const std::exception& e)
@@ -124,8 +107,11 @@ void socket::do_ws_write(const asio::const_buffer& in, bool binary,
     }
 }
 
+// WS (both).
+// ----------------------------------------------------------------------------
+
 // private
-void socket::handle_ws_write(const boost_code& ec, size_t size,
+void socket::handle_ws(const boost_code& ec, size_t size,
     const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
@@ -137,7 +123,7 @@ void socket::handle_ws_write(const boost_code& ec, size_t size,
     }
 
     const auto code = error::ws_to_error_code(ec);
-    if (code == error::unknown) logx("ws-write", ec);
+    if (code == error::unknown) logx("ws", ec);
     handler(code, size);
 }
 
@@ -188,7 +174,8 @@ void socket::handle_ws_event(ws::frame_type kind,
 
 //  WS (http upgrade).
 // ----------------------------------------------------------------------------
-// This is a unique aspect of websockets.
+// This is a unique aspect of websockets. Encodng is set to text by default.
+// This allows full generalization between tcp and websockets for json-rpc.
 
 // private
 // TODO: inject server name from config.
@@ -216,7 +203,7 @@ code socket::set_websocket(const http::request& request) NOEXCEPT
             });
             sock.control_callback(std::bind(&socket::do_ws_event,
                 shared_from_this(), _1, _2));
-            sock.binary(true);
+            sock.text(true);
             sock.accept(request);
         }
         else
@@ -236,7 +223,7 @@ code socket::set_websocket(const http::request& request) NOEXCEPT
             });
             sock.control_callback(std::bind(&socket::do_ws_event,
                 shared_from_this(), _1, _2));
-            sock.binary(true);
+            sock.text(true);
             sock.accept(request);
         }
 

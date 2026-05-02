@@ -256,6 +256,40 @@ asio::ssl::socket& socket::get_ssl() NOEXCEPT
     }, socket_);
 }
 
+// Allows for full generalization between tcp and websockets.
+void socket::async_read_some(const asio::mutable_buffer& buffer,
+    count_handler&& handler) NOEXCEPT
+{
+    if (is_websocket())
+    {
+        VARIANT_DISPATCH_METHOD(get_ws(),
+            async_read_some(buffer, std::move(handler)));
+    }
+    else
+    {
+        VARIANT_DISPATCH_METHOD(get_tcp(),
+            async_read_some(buffer, std::move(handler)));
+    }
+}
+
+// Allows for full generalization between tcp and websockets.
+void socket::async_write(const asio::const_buffer& buffer,
+    count_handler&& handler) NOEXCEPT
+{
+    BC_ASSERT(stranded());
+
+    if (is_websocket())
+    {
+        VARIANT_DISPATCH_METHOD(get_ws(),
+            async_write(buffer, std::move(handler)));
+    }
+    else
+    {
+        VARIANT_DISPATCH_FUNCTION(boost::asio::async_write, get_tcp(),
+            buffer, std::move(handler));
+    }
+}
+
 // Logging.
 // ----------------------------------------------------------------------------
 // private

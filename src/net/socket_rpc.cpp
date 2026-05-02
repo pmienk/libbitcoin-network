@@ -23,9 +23,6 @@
 #include <bitcoin/network/define.hpp>
 #include <bitcoin/network/log/log.hpp>
 
-// TODO: this is identical to TCP-RPC except for selections of the variant
-// socket and is_websocket() assertions.
-
 namespace libbitcoin {
 namespace network {
 
@@ -38,10 +35,10 @@ BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
 BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
-// WS-TCP (read).
+// RPC (read).
 // ----------------------------------------------------------------------------
 
-void socket::ws_rpc_read(http::flat_buffer& buffer, rpc::request& request,
+void socket::rpc_read(http::flat_buffer& buffer, rpc::request& request,
     count_handler&& handler) NOEXCEPT
 {
     boost_code ec{};
@@ -49,37 +46,33 @@ void socket::ws_rpc_read(http::flat_buffer& buffer, rpc::request& request,
     in->reader.init({}, ec);
 
     boost::asio::dispatch(strand_,
-        std::bind(&socket::do_ws_rpc_read,
+        std::bind(&socket::do_rpc_read,
             shared_from_this(), ec, zero, in, std::move(handler)));
 }
 
 // private
-// flat_buffer is copied to allow it to be non-const.
-void socket::do_ws_rpc_read(boost_code ec, size_t total,
+void socket::do_rpc_read(boost_code ec, size_t total,
     const read_rpc::ptr& in, const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
-    BC_ASSERT(is_websocket());
     constexpr auto size = rpc::writer::default_buffer;
 
     if (ec)
     {
         // Json parser emits rpc, http and json codes.
         const auto code = error::rpc_to_error_code(ec);
-        if (code == error::unknown) logx("ws-rpc-read", ec);
+        if (code == error::unknown) logx("rpc-read", ec);
         handler(code, total);
         return;
     }
 
-    // async_read_some allows variable sized or empty reads into fixed buffer.
-    VARIANT_DISPATCH_METHOD(get_ws(),
-        async_read_some(in->buffer.prepare(size),
-            std::bind(&socket::handle_ws_rpc_read,
-                shared_from_this(), _1, _2, total, in, handler)));
+    async_read_some(in->buffer.prepare(size),
+        std::bind(&socket::handle_rpc_read,
+            shared_from_this(), _1, _2, total, in, handler));
 }
 
 // private
-void socket::handle_ws_rpc_read(boost_code ec, size_t size, size_t total,
+void socket::handle_rpc_read(boost_code ec, size_t size, size_t total,
     const read_rpc::ptr& in, const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
@@ -118,13 +111,13 @@ void socket::handle_ws_rpc_read(boost_code ec, size_t size, size_t total,
     }
 
     // Handle error condition or incomplete message.
-    do_ws_rpc_read(ec, total, in, handler);
+    do_rpc_read(ec, total, in, handler);
 }
 
-// WS-TCP (write).
+// RPC (write).
 // ----------------------------------------------------------------------------
 
-void socket::ws_rpc_write(rpc::response& response,
+void socket::rpc_write(rpc::response& response,
     count_handler&& handler) NOEXCEPT
 {
     boost_code ec{};
@@ -133,39 +126,35 @@ void socket::ws_rpc_write(rpc::response& response,
 
     // Dispatch success or fail, for handler invoke on strand.
     boost::asio::dispatch(strand_,
-        std::bind(&socket::do_ws_rpc_write,
+        std::bind(&socket::do_rpc_write,
             shared_from_this(), ec, zero, out, std::move(handler)));
 }
 
 // private
-void socket::do_ws_rpc_write(boost_code ec, size_t total,
+void socket::do_rpc_write(boost_code ec, size_t total,
     const write_rpc::ptr& out, const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
-    BC_ASSERT(is_websocket());
 
     const auto buffer = ec ? write_rpc::out_buffer{} : out->writer.get(ec);
     if (ec)
     {
-        // Json serializer emits rpc, http and json codes (ws codes?).
+        // Json serializer emits rpc, http and json codes.
         const auto code = error::rpc_to_error_code(ec);
-        if (code == error::unknown) logx("ws-rpc-write", ec);
+        if (code == error::unknown) logx("rpc-write", ec);
         handler(code, total);
         return;
     }
 
     BC_ASSERT(buffer.has_value());
 
-    // Internally this may compose multiple async_write_some to consume buffer.
-    // Writes one buffer from writer, must still iterate until writer is done.
-    VARIANT_DISPATCH_FUNCTION(boost::asio::async_write, get_ws(),
-        buffer.value().first,
-            std::bind(&socket::handle_ws_rpc_write,
-                shared_from_this(), _1, _2, total, out, handler));
+    async_write(buffer.value().first,
+        std::bind(&socket::handle_rpc_write,
+            shared_from_this(), _1, _2, total, out, handler));
 }
 
 // private
-void socket::handle_ws_rpc_write(boost_code ec, size_t size, size_t total,
+void socket::handle_rpc_write(boost_code ec, size_t size, size_t total,
     const write_rpc::ptr& out, const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
@@ -184,13 +173,13 @@ void socket::handle_ws_rpc_write(boost_code ec, size_t size, size_t total,
     }
 
     // Handle error condition or incomplete message.
-    do_ws_rpc_write(ec, total, out, handler);
+    do_rpc_write(ec, total, out, handler);
 }
 
-// WS-TCP (notify).
+/// Unified JSON-RPC (notify).
 // ----------------------------------------------------------------------------
 
-void socket::ws_rpc_notify(rpc::request& notification,
+void socket::rpc_notify(rpc::request& notification,
     count_handler&& handler) NOEXCEPT
 {
     boost_code ec{};
@@ -199,39 +188,35 @@ void socket::ws_rpc_notify(rpc::request& notification,
 
     // Dispatch success or fail, for handler invoke on strand.
     boost::asio::dispatch(strand_,
-        std::bind(&socket::do_ws_rpc_notify,
+        std::bind(&socket::do_rpc_notify,
             shared_from_this(), ec, zero, out, std::move(handler)));
 }
 
 // private
-void socket::do_ws_rpc_notify(boost_code ec, size_t total,
+void socket::do_rpc_notify(boost_code ec, size_t total,
     const notify_rpc::ptr& out, const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
-    BC_ASSERT(is_websocket());
 
     const auto buffer = ec ? notify_rpc::out_buffer{} : out->writer.get(ec);
     if (ec)
     {
         // Json serializer emits rpc, http and json codes.
         const auto code = error::rpc_to_error_code(ec);
-        if (code == error::unknown) logx("ws-rpc-notify", ec);
+        if (code == error::unknown) logx("rpc-notify", ec);
         handler(code, total);
         return;
     }
 
     BC_ASSERT(buffer.has_value());
 
-    // Internally this may compose multiple async_write_some to consume buffer.
-    // Writes one buffer from writer, must still iterate until writer is done.
-    VARIANT_DISPATCH_FUNCTION(boost::asio::async_write, get_ws(),
-        buffer.value().first,
-            std::bind(&socket::handle_ws_rpc_notify,
-                shared_from_this(), _1, _2, total, out, handler));
+    async_write(buffer.value().first,
+        std::bind(&socket::handle_rpc_notify,
+            shared_from_this(), _1, _2, total, out, handler));
 }
 
 // private
-void socket::handle_ws_rpc_notify(boost_code ec, size_t size, size_t total,
+void socket::handle_rpc_notify(boost_code ec, size_t size, size_t total,
     const notify_rpc::ptr& out, const count_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
@@ -250,7 +235,7 @@ void socket::handle_ws_rpc_notify(boost_code ec, size_t size, size_t total,
     }
 
     // Handle error condition or incomplete message.
-    do_ws_rpc_notify(ec, total, out, handler);
+    do_rpc_notify(ec, total, out, handler);
 }
 
 BC_POP_WARNING()

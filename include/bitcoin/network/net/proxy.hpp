@@ -133,7 +133,18 @@ protected:
     virtual void write(const asio::const_buffer& buffer,
         count_handler&& handler) NOEXCEPT;
 
-    /// TCP-RPC (electrum/stratum_v1).
+    /// WS (generic).
+    /// -----------------------------------------------------------------------
+
+    /// Read full buffer from the websocket (post-upgrade).
+    virtual void ws_read(http::flat_buffer& out,
+        count_handler&& handler) NOEXCEPT;
+
+    /// Write full buffer to the websocket (post-upgrade), specify binary/text.
+    virtual void ws_write(const asio::const_buffer& in, bool binary,
+        count_handler&& handler) NOEXCEPT;
+
+    /// RPC (TCP: electrum/stratum_v1, WS: btcd).
     /// -----------------------------------------------------------------------
 
     /// Read rpc request from the socket, using provided buffer.
@@ -146,32 +157,6 @@ protected:
 
     /// Write rpc notification (request) to the socket (json buffer in body).
     virtual void write(rpc::request& notification,
-        count_handler&& handler) NOEXCEPT;
-
-    /// WS (generic).
-    /// -----------------------------------------------------------------------
-
-    /// Read full buffer from the websocket (post-upgrade).
-    virtual void ws_read(http::flat_buffer& out,
-        count_handler&& handler) NOEXCEPT;
-
-    /// Write full buffer to the websocket (post-upgrade), specify binary/text.
-    virtual void ws_write(const asio::const_buffer& in, bool binary,
-        count_handler&& handler) NOEXCEPT;
-
-    /// WS-RPC (btcd).
-    /// -----------------------------------------------------------------------
-
-    /// Read rpc request from the websocket, handler posted to socket strand.
-    virtual void ws_read(http::flat_buffer& buffer, rpc::request& request,
-        count_handler&& handler) NOEXCEPT;
-
-    /// Write rpc response to the websocket, handler posted to socket strand.
-    virtual void ws_write(rpc::response& response,
-        count_handler&& handler) NOEXCEPT;
-
-    /// Write rpc notification to websocket, handler posted to socket strand.
-    virtual void ws_notify(rpc::request& notification,
         count_handler&& handler) NOEXCEPT;
 
     /// HTTP (generic/rpc).
@@ -192,15 +177,11 @@ private:
     // For write buffering.
     void do_tcp_write(const asio::const_buffer& payload,
         const count_handler& handler) NOEXCEPT;
-    void do_tcp_write_response(const ref<rpc::response>& response,
-        const count_handler& handler) NOEXCEPT;
-    void do_tcp_write_notification(const ref<rpc::request>& notification,
-        const count_handler& handler) NOEXCEPT;
     void do_ws_write(const asio::const_buffer& in, bool binary,
         const count_handler& handler) NOEXCEPT;
-    void do_ws_write_response(const ref<rpc::response>& response,
+    void do_rpc_write_response(const ref<rpc::response>& response,
         const count_handler& handler) NOEXCEPT;
-    void do_ws_write_notification(const ref<rpc::request>& notification,
+    void do_rpc_write_notification(const ref<rpc::request>& notification,
         const count_handler& handler) NOEXCEPT;
     void do_subscribe_stop(const result_handler& handler,
         const result_handler& complete) NOEXCEPT;

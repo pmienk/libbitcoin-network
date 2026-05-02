@@ -111,12 +111,11 @@ src_libbitcoin_network_la_SOURCES = \
     src/net/socket.cpp \
     src/net/socket_connect.cpp \
     src/net/socket_http.cpp \
+    src/net/socket_rpc.cpp \
     src/net/socket_stop.cpp \
     src/net/socket_tcp.cpp \
-    src/net/socket_tcp_rpc.cpp \
     src/net/socket_wait.cpp \
     src/net/socket_ws.cpp \
-    src/net/socket_ws_rpc.cpp \
     src/protocols/protocol.cpp \
     src/protocols/protocol_address_in_209.cpp \
     src/protocols/protocol_address_out_209.cpp \

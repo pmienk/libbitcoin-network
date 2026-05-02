@@ -121,21 +121,6 @@ public:
     virtual void tcp_write(const asio::const_buffer& in,
         count_handler&& handler) NOEXCEPT;
 
-    /// TCP-RPC (electrum/stratum_v1).
-    /// -----------------------------------------------------------------------
-
-    /// Read rpc request from the socket, handler posted to socket strand.
-    virtual void tcp_rpc_read(http::flat_buffer& buffer, rpc::request& request,
-        count_handler&& handler) NOEXCEPT;
-
-    /// Write rpc response to the socket, handler posted to socket strand.
-    virtual void tcp_rpc_write(rpc::response& response,
-        count_handler&& handler) NOEXCEPT;
-
-    /// Write rpc notification to the socket, handler posted to socket strand.
-    virtual void tcp_rpc_notify(rpc::request& notification,
-        count_handler&& handler) NOEXCEPT;
-
     /// WS (generic).
     /// -----------------------------------------------------------------------
 
@@ -147,19 +132,19 @@ public:
     virtual void ws_write(const asio::const_buffer& in, bool binary,
         count_handler&& handler) NOEXCEPT;
 
-    /// WS-RPC (btcd).
+    /// RPC (TCP: electrum/stratum_v1, WS: btcd).
     /// -----------------------------------------------------------------------
 
-    /// Read rpc request from the websocket, handler posted to socket strand.
-    virtual void ws_rpc_read(http::flat_buffer& buffer, rpc::request& request,
+    /// Read rpc request from the socket, handler posted to socket strand.
+    virtual void rpc_read(http::flat_buffer& buffer, rpc::request& request,
         count_handler&& handler) NOEXCEPT;
 
-    /// Write rpc response to the websocket, handler posted to socket strand.
-    virtual void ws_rpc_write(rpc::response& response,
+    /// Write rpc response to the socket, handler posted to socket strand.
+    virtual void rpc_write(rpc::response& response,
         count_handler&& handler) NOEXCEPT;
 
-    /// Write rpc notification to websocket, handler posted to socket strand.
-    virtual void ws_rpc_notify(rpc::request& notification,
+    /// Write rpc notification to the socket, handler posted to socket strand.
+    virtual void rpc_notify(rpc::request& notification,
         count_handler&& handler) NOEXCEPT;
 
     /// HTTP (generic/rpc).
@@ -234,6 +219,10 @@ protected:
     tcp_t get_tcp() NOEXCEPT;
     asio::socket& get_base() NOEXCEPT;
     asio::ssl::socket& get_ssl() NOEXCEPT;
+    void async_read_some(const asio::mutable_buffer& buffer,
+        count_handler&& handler) NOEXCEPT;
+    void async_write(const asio::const_buffer& buffer,
+        count_handler&& handler) NOEXCEPT;
 
 private:
     using http_parser = boost::beast::http::request_parser<http::body>;
@@ -304,14 +293,6 @@ private:
     void do_tcp_write(const asio::const_buffer& in,
         const count_handler& handler) NOEXCEPT;
 
-    // tcp (rpc)
-    void do_tcp_rpc_read(boost_code ec, size_t total,
-        const read_rpc::ptr& in, const count_handler& handler) NOEXCEPT;
-    void do_tcp_rpc_write(boost_code ec, size_t total,
-        const write_rpc::ptr& out, const count_handler& handler) NOEXCEPT;
-    void do_tcp_rpc_notify(boost_code ec, size_t total,
-        const notify_rpc::ptr& out, const count_handler& handler) NOEXCEPT;
-
     // ws (generic)
     void do_ws_read(ref<http::flat_buffer> out,
         const count_handler& handler) NOEXCEPT;
@@ -320,12 +301,12 @@ private:
     void do_ws_event(ws::frame_type kind,
         const std::string_view& data) NOEXCEPT;
 
-    // ws (rpc)
-    void do_ws_rpc_read(boost_code ec, size_t total,
+    // rpc (tcp/ws)
+    void do_rpc_read(boost_code ec, size_t total,
         const read_rpc::ptr& in, const count_handler& handler) NOEXCEPT;
-    void do_ws_rpc_write(boost_code ec, size_t total,
+    void do_rpc_write(boost_code ec, size_t total,
         const write_rpc::ptr& out, const count_handler& handler) NOEXCEPT;
-    void do_ws_rpc_notify(boost_code ec, size_t total,
+    void do_rpc_notify(boost_code ec, size_t total,
         const notify_rpc::ptr& out, const count_handler& handler) NOEXCEPT;
 
     // http (generic)
@@ -360,29 +341,19 @@ private:
     void handle_tcp(const boost_code& ec, size_t size,
         const count_handler& handler) NOEXCEPT;
 
-    // tcp (rpc)
-    void handle_tcp_rpc_read(boost_code ec, size_t size, size_t total,
+    // rpc (tcp/ws)
+    void handle_rpc_read(boost_code ec, size_t size, size_t total,
         const read_rpc::ptr& in, const count_handler& handler) NOEXCEPT;
-    void handle_tcp_rpc_write(boost_code ec, size_t size, size_t total,
+    void handle_rpc_write(boost_code ec, size_t size, size_t total,
         const write_rpc::ptr& out, const count_handler& handler) NOEXCEPT;
-    void handle_tcp_rpc_notify(boost_code ec, size_t size, size_t total,
+    void handle_rpc_notify(boost_code ec, size_t size, size_t total,
         const notify_rpc::ptr& out, const count_handler& handler) NOEXCEPT;
 
     // ws (generic)
-    void handle_ws_read(const boost_code& ec, size_t size,
-        const count_handler& handler) NOEXCEPT;
-    void handle_ws_write(const boost_code& ec, size_t size,
+    void handle_ws(const boost_code& ec, size_t size,
         const count_handler& handler) NOEXCEPT;
     void handle_ws_event(ws::frame_type kind,
         const std::string& data) NOEXCEPT;
-
-    // ws (rpc)
-    void handle_ws_rpc_read(boost_code ec, size_t size, size_t total,
-        const read_rpc::ptr& in, const count_handler& handler) NOEXCEPT;
-    void handle_ws_rpc_write(boost_code ec, size_t size, size_t total,
-        const write_rpc::ptr& out, const count_handler& handler) NOEXCEPT;
-    void handle_ws_rpc_notify(boost_code ec, size_t size, size_t total,
-        const notify_rpc::ptr& out, const count_handler& handler) NOEXCEPT;
 
     // http (generic/rpc)
     void handle_http_read(const boost_code& ec, size_t size,
