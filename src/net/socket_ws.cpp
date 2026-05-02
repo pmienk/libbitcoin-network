@@ -32,7 +32,7 @@ using namespace std::placeholders;
 
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
-// WS Read.
+// WS (read).
 // ----------------------------------------------------------------------------
 
 void socket::ws_read(http::flat_buffer& out,
@@ -43,6 +43,7 @@ void socket::ws_read(http::flat_buffer& out,
             shared_from_this(), std::ref(out), std::move(handler)));
 }
 
+// private
 // flat_buffer is copied to allow it to be non-const.
 void socket::do_ws_read(ref<http::flat_buffer> out,
     const count_handler& handler) NOEXCEPT
@@ -66,6 +67,7 @@ void socket::do_ws_read(ref<http::flat_buffer> out,
     }
 }
 
+// private
 void socket::handle_ws_read(const boost_code& ec, size_t size,
     const count_handler& handler) NOEXCEPT
 {
@@ -82,7 +84,7 @@ void socket::handle_ws_read(const boost_code& ec, size_t size,
     handler(code, size);
 }
 
-// WS Write.
+// WS (write).
 // ----------------------------------------------------------------------------
 
 void socket::ws_write(const asio::const_buffer& in, bool binary,
@@ -93,6 +95,7 @@ void socket::ws_write(const asio::const_buffer& in, bool binary,
             shared_from_this(), in, binary, std::move(handler)));
 }
 
+// private
 void socket::do_ws_write(const asio::const_buffer& in, bool binary,
     const count_handler& handler) NOEXCEPT
 {
@@ -121,6 +124,7 @@ void socket::do_ws_write(const asio::const_buffer& in, bool binary,
     }
 }
 
+// private
 void socket::handle_ws_write(const boost_code& ec, size_t size,
     const count_handler& handler) NOEXCEPT
 {
@@ -137,9 +141,26 @@ void socket::handle_ws_write(const boost_code& ec, size_t size,
     handler(code, size);
 }
 
-// WS Event.
+// WS (event).
 // ----------------------------------------------------------------------------
+// This is a unique/internal aspect of websockets.
 
+// private
+void socket::do_ws_event(ws::frame_type kind,
+    const std::string_view& data) NOEXCEPT
+{
+    // Must not post to the iocontext once closed, and this is under control of
+    // the websocket, so must be guarded here. Otherwise the socket will leak.
+    if (stopped())
+        return;
+
+    // Takes ownership of the string.
+    boost::asio::dispatch(strand_,
+        std::bind(&socket::handle_ws_event,
+            shared_from_this(), kind, std::string{ data }));
+}
+
+// private
 void socket::handle_ws_event(ws::frame_type kind,
     const std::string& data) NOEXCEPT
 {
@@ -165,9 +186,11 @@ void socket::handle_ws_event(ws::frame_type kind,
     }
 }
 
-//  Upgrade.
+//  WS (http upgrade).
 // ----------------------------------------------------------------------------
+// This is a unique aspect of websockets.
 
+// private
 // TODO: inject server name from config.
 code socket::set_websocket(const http::request& request) NOEXCEPT
 {
@@ -224,20 +247,6 @@ code socket::set_websocket(const http::request& request) NOEXCEPT
         LOGF("Exception @ set_websocket: " << e.what());
         return error::operation_failed;
     }
-}
-
-void socket::do_ws_event(ws::frame_type kind,
-    const std::string_view& data) NOEXCEPT
-{
-    // Must not post to the iocontext once closed, and this is under control of
-    // the websocket, so must be guarded here. Otherwise the socket will leak.
-    if (stopped())
-        return;
-
-    // Takes ownership of the string.
-    boost::asio::dispatch(strand_,
-        std::bind(&socket::handle_ws_event,
-            shared_from_this(), kind, std::string{ data }));
 }
 
 BC_POP_WARNING()

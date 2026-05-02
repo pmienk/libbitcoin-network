@@ -117,7 +117,7 @@ void channel::handle_monitor(const code& ec) NOEXCEPT
 // Called from start or strand.
 
 // protected
-void channel::waiting() NOEXCEPT
+void channel::reading() NOEXCEPT
 {
     BC_ASSERT(stranded());
     start_inactivity();

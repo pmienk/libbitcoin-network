@@ -31,7 +31,7 @@ using namespace std::placeholders;
 
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
 
-// TCP/P2P Read.
+// TCP (read).
 // ----------------------------------------------------------------------------
 
 void socket::tcp_read(const asio::mutable_buffer& out,
@@ -43,6 +43,7 @@ void socket::tcp_read(const asio::mutable_buffer& out,
             shared_from_this(), out, std::move(handler)));
 }
 
+// private
 void socket::do_tcp_read(const asio::mutable_buffer& out,
     const count_handler& handler) NOEXCEPT
 {
@@ -62,7 +63,7 @@ void socket::do_tcp_read(const asio::mutable_buffer& out,
     }
 }
 
-// TCP/P2P Write.
+// TCP (write).
 // ----------------------------------------------------------------------------
 
 void socket::tcp_write(const asio::const_buffer& in,
@@ -74,6 +75,7 @@ void socket::tcp_write(const asio::const_buffer& in,
             shared_from_this(), in, std::move(handler)));
 }
 
+// private
 void socket::do_tcp_write(const asio::const_buffer& in,
     const count_handler& handler) NOEXCEPT
 {
@@ -93,9 +95,10 @@ void socket::do_tcp_write(const asio::const_buffer& in,
     }
 }
 
-// TCP/P2P (both).
+// TCP (both).
 // ----------------------------------------------------------------------------
 
+// private
 void socket::handle_tcp(const boost_code& ec, size_t size,
     const count_handler& handler) NOEXCEPT
 {
