@@ -184,7 +184,13 @@ inline void CLASS::handle_send(const code& ec, size_t bytes,
     const result_handler& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
-    if (ec) stop(ec);
+    if (ec)
+    {
+        std::cout << "rpc send/notify error: (" << bytes << ") bytes ["
+            << endpoint() << "] " << ec.message() << std::endl;
+
+        stop(ec);
+    }
 
     // Typically a noop, but handshake may pause channel here.
     handler(ec);
@@ -192,6 +198,9 @@ inline void CLASS::handle_send(const code& ec, size_t bytes,
     // Only invoke continuation for a request response (not notification).
     if constexpr (is_same_type<Message, rpc::response_t>)
     {
+        std::cout << "rpc send complete: (" << bytes << ") bytes ["
+            << endpoint() << "] " << ec.message() << std::endl;
+
         LOGA("Rpc response: (" << bytes << ") bytes [" << endpoint() << "] "
             << message->message.error.value_or(rpc::result_t{}).message);
 
@@ -200,6 +209,9 @@ inline void CLASS::handle_send(const code& ec, size_t bytes,
     }
     else
     {
+        std::cout << "rpc notify complete: (" << bytes << ") bytes ["
+            << endpoint() << "] " << ec.message() << std::endl;
+
         LOGA("Rpc notification: (" << bytes << ") bytes [" << endpoint() << "] "
             << message->message.method);
     }
