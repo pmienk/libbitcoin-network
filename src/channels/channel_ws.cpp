@@ -46,7 +46,7 @@ void channel_ws::receive() NOEXCEPT
         return;
     }
 
-    ws_read(request_buffer(),
+    read(request_buffer(),
         std::bind(&channel_ws::handle_receive_ws,
             shared_from_base<channel_ws>(), _1, _2));
 }

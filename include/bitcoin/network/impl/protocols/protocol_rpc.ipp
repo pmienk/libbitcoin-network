@@ -57,6 +57,7 @@ TEMPLATE
 inline void CLASS::send_notification(rpc::string_t&& method,
     rpc::params_t&& notification, size_t size_hint) NOEXCEPT
 {
+    using namespace std::placeholders;
     channel_->send_notification(std::move(method), std::move(notification),
         size_hint, std::bind(&CLASS::handle_send,
             shared_from_base<CLASS>(), _1));

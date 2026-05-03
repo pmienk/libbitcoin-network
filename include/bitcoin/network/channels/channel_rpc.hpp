@@ -108,12 +108,7 @@ protected:
     inline void send(Message&& message, size_t size_hint,
         result_handler&& handler) NOEXCEPT;
 
-    /// Size and assign response_buffer_ (value type is json-rpc::json).
-    template <typename Message>
-    inline rpc::message_ptr<Message> assign_message(Message&& message,
-        size_t size_hint) NOEXCEPT;
-
-    /// Handle send<response> completion, invokes receive().
+    /// Handle send completion, invokes receive() for non-notifications.
     template <typename Message>
     inline void handle_send(const code& ec, size_t bytes,
         const rpc::message_cptr<Message>& message,

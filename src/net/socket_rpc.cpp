@@ -148,7 +148,7 @@ void socket::do_rpc_write(boost_code ec, size_t total,
 
     BC_ASSERT(buffer.has_value());
 
-    async_write(buffer.value().first,
+    async_write(buffer.value().first, true,
         std::bind(&socket::handle_rpc_write,
             shared_from_this(), _1, _2, total, out, handler));
 }
@@ -176,7 +176,7 @@ void socket::handle_rpc_write(boost_code ec, size_t size, size_t total,
     do_rpc_write(ec, total, out, handler);
 }
 
-/// Unified JSON-RPC (notify).
+/// RPC (notify).
 // ----------------------------------------------------------------------------
 
 void socket::rpc_notify(rpc::request& notification,
@@ -210,7 +210,7 @@ void socket::do_rpc_notify(boost_code ec, size_t total,
 
     BC_ASSERT(buffer.has_value());
 
-    async_write(buffer.value().first,
+    async_write(buffer.value().first, true,
         std::bind(&socket::handle_rpc_notify,
             shared_from_this(), _1, _2, total, out, handler));
 }

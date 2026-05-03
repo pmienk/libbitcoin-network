@@ -26,10 +26,7 @@
 namespace libbitcoin {
 namespace network {
 
-// Shared pointers required in handler parameters so closures control lifetime.
 BC_PUSH_WARNING(NO_THROW_IN_NOEXCEPT)
-BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
-BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
 
 using namespace std::placeholders;
 
@@ -46,21 +43,20 @@ void proxy::cancel(result_handler&& handler) NOEXCEPT
     socket_->cancel(std::move(handler));
 }
 
-// TCP (generic, p2p).
+//  RAW (generic, variable size).
 // ----------------------------------------------------------------------------
 
-void proxy::read(const asio::mutable_buffer& buffer,
-    count_handler&& handler) NOEXCEPT
+void proxy::read(http::flat_buffer& out, count_handler&& handler) NOEXCEPT
 {
     do_reading();
-    socket_->tcp_read(buffer, std::move(handler));
+    socket_->raw_read(out, std::move(handler));
 }
 
-void proxy::write(const asio::const_buffer& buffer,
-    count_handler&& handler) NOEXCEPT
+void proxy::write(const asio::const_buffer& in, count_handler&& handler,
+    bool binary) NOEXCEPT
 {
-    writer call = std::bind(&proxy::do_tcp_write,
-        shared_from_this(), buffer, std::move(handler));
+    writer call = std::bind(&proxy::do_raw_write,
+        shared_from_this(), in, binary, std::move(handler));
 
     boost::asio::dispatch(strand(),
         std::bind(&proxy::do_write,
@@ -68,32 +64,42 @@ void proxy::write(const asio::const_buffer& buffer,
 }
 
 // private
-void proxy::do_tcp_write(const asio::const_buffer& buffer,
+void proxy::do_raw_write(const asio::const_buffer& payload, bool binary,
     const count_handler& handler) NOEXCEPT
 {
-    socket_->tcp_write({ buffer.data(), buffer.size() },
+    socket_->raw_write({ payload.data(), payload.size() },
         std::bind(&proxy::handle_write,
-            shared_from_this(), _1, _2, handler));
+            shared_from_this(), _1, _2, handler), binary);
 }
 
-// WS (generic).
+//  P2P (generic, fixed size).
 // ----------------------------------------------------------------------------
 
-void proxy::ws_read(http::flat_buffer& out, count_handler&& handler) NOEXCEPT
-{
-    do_reading();
-    socket_->ws_read(out, std::move(handler));
-}
-
-void proxy::ws_write(const asio::const_buffer& in, bool binary,
+void proxy::read(const asio::mutable_buffer& out,
     count_handler&& handler) NOEXCEPT
 {
-    writer call = std::bind(&proxy::do_ws_write,
-        shared_from_this(), in, binary, std::move(handler));
+    do_reading();
+    socket_->p2p_read(out, std::move(handler));
+}
+
+void proxy::write(const asio::const_buffer& in,
+    count_handler&& handler) NOEXCEPT
+{
+    writer call = std::bind(&proxy::do_p2p_write,
+        shared_from_this(), in, std::move(handler));
 
     boost::asio::dispatch(strand(),
         std::bind(&proxy::do_write,
             shared_from_this(), std::move(call)));
+}
+
+// private
+void proxy::do_p2p_write(const asio::const_buffer& payload,
+    const count_handler& handler) NOEXCEPT
+{
+    socket_->p2p_write({ payload.data(), payload.size() },
+        std::bind(&proxy::handle_write,
+            shared_from_this(), _1, _2, handler));
 }
 
 // RPC (TCP: electrum/stratum_v1, WS: btcd).
@@ -108,7 +114,7 @@ void proxy::read(http::flat_buffer& buffer, rpc::request& request,
 
 void proxy::write(rpc::response& response, count_handler&& handler) NOEXCEPT
 {
-    writer call = std::bind(&proxy::do_rpc_write_response,
+    writer call = std::bind(&proxy::do_response_write,
         shared_from_this(), std::ref(response), std::move(handler));
 
     boost::asio::dispatch(strand(),
@@ -118,7 +124,7 @@ void proxy::write(rpc::response& response, count_handler&& handler) NOEXCEPT
 
 void proxy::write(rpc::request& notification, count_handler&& handler) NOEXCEPT
 {
-    writer call = std::bind(&proxy::do_rpc_write_notification,
+    writer call = std::bind(&proxy::do_notification_write,
         shared_from_this(), std::ref(notification), std::move(handler));
 
     boost::asio::dispatch(strand(),
@@ -127,7 +133,7 @@ void proxy::write(rpc::request& notification, count_handler&& handler) NOEXCEPT
 }
 
 // private
-void proxy::do_rpc_write_response(const ref<rpc::response>& response,
+void proxy::do_response_write(const ref<rpc::response>& response,
     const count_handler& handler) NOEXCEPT
 {
     socket_->rpc_write(response.get(),
@@ -136,19 +142,10 @@ void proxy::do_rpc_write_response(const ref<rpc::response>& response,
 }
 
 // private
-void proxy::do_rpc_write_notification(const ref<rpc::request>& notification,
+void proxy::do_notification_write(const ref<rpc::request>& notification,
     const count_handler& handler) NOEXCEPT
 {
     socket_->rpc_notify(notification.get(),
-        std::bind(&proxy::handle_write,
-            shared_from_this(), _1, _2, handler));
-}
-
-// private
-void proxy::do_ws_write(const asio::const_buffer& in, bool binary,
-    const count_handler& handler) NOEXCEPT
-{
-    socket_->ws_write(in, binary,
         std::bind(&proxy::handle_write,
             shared_from_this(), _1, _2, handler));
 }
@@ -171,8 +168,6 @@ void proxy::write(http::response& response,
     socket_->http_write(response, std::move(handler));
 }
 
-BC_POP_WARNING()
-BC_POP_WARNING()
 BC_POP_WARNING()
 
 } // namespace network

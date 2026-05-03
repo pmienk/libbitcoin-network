@@ -28,8 +28,6 @@
 namespace libbitcoin {
 namespace network {
 
-using namespace std::placeholders;
-
 // Shared pointers required in handler parameters so closures control lifetime.
 BC_PUSH_WARNING(NO_VALUE_OR_CONST_REF_SHARED_PTR)
 BC_PUSH_WARNING(SMART_PTR_NOT_NEEDED)
@@ -64,16 +62,24 @@ inline void CLASS::receive() NOEXCEPT
 {
     BC_ASSERT(stranded());
     BC_ASSERT_MSG(!reading_, "already reading");
+    using namespace std::placeholders;
+    using namespace system;
 
     if (stopped() || paused() || reading_)
         return;
 
     reading_ = true;
-    const auto in = system::to_shared<rpc::request>();
-    using namespace std::placeholders;
+    const auto in = emplace_shared<rpc::request>
+    (
+        // default json model, unused size_hint, unused serialization buffer.
+        json::json_value{},
 
-    // Electrum, allow params singleton to be accepted as array.
-    in->strict = false;
+        // default incoming rpc message.
+        rpc::request_t{},
+
+        // !strict allows params singleton to be accepted as array (Electrum).
+        false
+    );
 
     // Post handle_read to strand upon stop, error, or buffer full.
     read(request_buffer(), *in,
@@ -146,34 +152,29 @@ inline http::flat_buffer& CLASS::request_buffer() NOEXCEPT
 // protected
 TEMPLATE
 template <typename Message>
-inline void CLASS::send(Message&& model, size_t size_hint,
+inline void CLASS::send(Message&& message, size_t size_hint,
     result_handler&& handler) NOEXCEPT
 {
     BC_ASSERT(stranded());
-    const auto out = assign_message(std::move(model), size_hint);
-    count_handler complete = std::bind(&CLASS::handle_send<Message>,
-        shared_from_base<CLASS>(), _1, _2, out, std::move(handler));
+    using namespace std::placeholders;
+    using namespace system;
 
-    if (!out)
-    {
-        complete(error::bad_alloc, {});
-        return;
-    }
-    
-    write(*out, std::move(complete));
-}
+    // Templated message due to notification sending request_t.
+    const auto out = emplace_shared<rpc::message_value<Message>>
+    (
+        // default json model, buffer size_hint, default serialization buffer.
+        json::json_value{ {}, size_hint, {} },
 
-// protected
-TEMPLATE
-template <typename Message>
-inline rpc::message_ptr<Message> CLASS::assign_message(Message&& message,
-    size_t size_hint) NOEXCEPT
-{
-    BC_ASSERT(stranded());
-    const auto ptr = system::to_shared<rpc::message_value<Message>>();
-    ptr->message = std::move(message);
-    ptr->size_hint = size_hint;
-    return ptr;
+        // outgoing rpc message (request_t or response_t).
+        std::forward<Message>(message),
+
+        // unused strict json-rpc.
+        true
+    );
+
+    // Write message to socket, capture its pointer for lifetime.
+    write(*out, std::bind(&CLASS::handle_send<Message>,
+        shared_from_base<CLASS>(), _1, _2, out, std::move(handler)));
 }
 
 // protected
@@ -212,8 +213,7 @@ inline void CLASS::send_code(const code& ec, result_handler&& handler) NOEXCEPT
     {
         .code = ec.value(),
         .message = ec.message()
-    },
-    std::move(handler));
+    }, std::move(handler));
 }
 
 TEMPLATE
