@@ -39,7 +39,7 @@ deadline::deadline(const logger& log, asio::strand& strand,
     timer_(strand),
     tracker<deadline>(log)
 {
-    timer_.expires_from_now();
+    timer_.expires_after(timeout);
 }
 
 deadline::~deadline() NOEXCEPT
